@@ -159,6 +159,27 @@ def register_routers():
     except ImportError as e:
         logger.warning(f"Billing router not available: {e}")
 
+    # Custom Fields - THE CORE FEATURE!
+    try:
+        from api.custom_fields_simple import router as custom_fields_router
+        app.include_router(custom_fields_router, tags=["custom-fields"])
+        logger.info("Custom fields router registered - Core feature enabled!")
+    except ImportError:
+        try:
+            from api.custom_fields import router as custom_fields_router
+            app.include_router(custom_fields_router, tags=["custom-fields"])
+            logger.info("Custom fields router registered - Core feature enabled!")
+        except ImportError as e:
+            logger.error(f"CRITICAL: Custom fields router not available: {e}")
+
+    # Templates for custom fields
+    try:
+        from api.templates_simple import router as templates_router
+        app.include_router(templates_router, prefix="/api/templates", tags=["templates"])
+        logger.info("Templates router registered")
+    except ImportError as e:
+        logger.warning(f"Templates router not available: {e}")
+
 # Register all routers
 register_routers()
 
@@ -201,7 +222,9 @@ async def api_root():
             "workflows": "/api/workflows",
             "monitoring": "/api/monitoring",
             "dashboard": "/api/dashboard",
-            "billing": "/api/billing"
+            "billing": "/api/billing",
+            "custom_fields": "/api/custom-fields",
+            "templates": "/api/templates"
         }
     }
 
