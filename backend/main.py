@@ -179,6 +179,14 @@ def register_routers():
         logger.info("Templates router registered")
     except ImportError as e:
         logger.warning(f"Templates router not available: {e}")
+    
+    # Metafields API - Direct Shopify integration!
+    try:
+        from api.metafields import router as metafields_router
+        app.include_router(metafields_router, tags=["metafields"])
+        logger.info("Metafields router registered - Direct Shopify integration enabled!")
+    except ImportError as e:
+        logger.warning(f"Metafields router not available: {e}")
 
 # Register all routers
 register_routers()

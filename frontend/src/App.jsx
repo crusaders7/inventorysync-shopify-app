@@ -13,6 +13,7 @@ import AuthCallback from './components/AuthCallback';
 import BillingSetup from './components/BillingSetup';
 import CustomFieldsManager from './components/CustomFieldsManager';
 import CustomFieldsEnhanced from './components/CustomFieldsEnhancedSimple';
+import ProductMetafields from './components/ProductMetafields';
 import { setupDevAuth } from './utils/devAuth';
 
 function App() {
@@ -86,6 +87,7 @@ function App() {
               <Routes>
                 {/* Embedded routes - no navigation needed */}
                 <Route path="/" element={<Dashboard showToast={showToast} />} />
+                <Route path="/product-metafields" element={<ProductMetafields shop={shopDomain} />} />
                 <Route path="/custom-fields" element={<CustomFieldsManager shop={shopDomain} showToast={showToast} />} />
                 <Route path="/inventory" element={<Inventory showToast={showToast} />} />
                 <Route path="/settings" element={<Settings showToast={showToast} />} />
