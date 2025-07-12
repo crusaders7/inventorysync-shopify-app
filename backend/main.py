@@ -188,11 +188,23 @@ register_routers()
 async def root():
     """Root endpoint"""
     return {
-        "message": "InventorySync Shopify App API",
+        "message": "InventorySync - Save $1,971/month on Custom Fields!",
         "version": "1.0.0",
         "status": "healthy",
-        "docs": "/docs",
-        "redoc": "/redoc"
+        "value_proposition": {
+            "monthly_savings": "$1,971",
+            "annual_savings": "$23,652",
+            "our_price": "$29-99/month",
+            "shopify_plus_price": "$2,000+/month"
+        },
+        "quick_links": {
+            "api_overview": "/api",
+            "custom_fields_demo": "/api/custom-fields/value-proposition",
+            "templates": "/api/custom-fields/templates",
+            "interactive_docs": "/docs",
+            "api_docs": "/redoc"
+        },
+        "core_feature": "Add unlimited custom fields to Shopify without upgrading to Plus!"
     }
 
 @app.get("/health")
