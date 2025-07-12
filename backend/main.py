@@ -31,7 +31,7 @@ app.add_middleware(
 try:
     from middleware.webhook_verification import WebhookVerificationMiddleware
     from middleware.rate_limiting import RateLimitMiddleware
-    from middleware.security_headers import SecurityHeadersMiddleware
+    from middleware.security_headers_fixed import SecurityHeadersMiddleware
     
     # Add security headers
     app.add_middleware(SecurityHeadersMiddleware)
