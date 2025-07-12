@@ -36,6 +36,10 @@ COPY --from=builder /root/.local /home/appuser/.local
 # Copy the application
 COPY --chown=appuser:appuser backend/ ./backend/
 
+# Copy and make start script executable
+COPY --chown=appuser:appuser backend/start.sh ./start.sh
+RUN chmod +x ./start.sh
+
 # Set Python path and other environment variables
 ENV PYTHONPATH=/app/backend:$PYTHONPATH \
     PATH=/home/appuser/.local/bin:$PATH \
@@ -50,11 +54,5 @@ USER appuser
 HEALTHCHECK --interval=30s --timeout=10s --start-period=10s --retries=3 \
     CMD curl -f http://localhost:${PORT}/health || exit 1
 
-# Run the application with production settings
-CMD ["python", "-m", "uvicorn", "backend.main:app", \
-     "--host", "0.0.0.0", \
-     "--port", "8000", \
-     "--workers", "4", \
-     "--loop", "uvloop", \
-     "--access-log", \
-     "--log-config", "backend/logging_config.yaml"]
+# Run the application with start script
+CMD ["./start.sh"]
