@@ -12,6 +12,7 @@ import ShopifyInstall from './components/ShopifyInstall';
 import AuthCallback from './components/AuthCallback';
 import BillingSetup from './components/BillingSetup';
 import CustomFieldsManager from './components/CustomFieldsManager';
+import CustomFieldsEnhanced from './components/CustomFieldsEnhancedSimple';
 import { setupDevAuth } from './utils/devAuth';
 
 function App() {
@@ -113,6 +114,7 @@ function App() {
               {/* Protected routes */}
               <Route path="/" element={isAuthenticated ? <Dashboard showToast={showToast} /> : <Navigate to="/install" />} />
               <Route path="/custom-fields" element={isAuthenticated ? <CustomFieldsManager shop={shopDomain} showToast={showToast} /> : <Navigate to="/install" />} />
+              <Route path="/custom-fields-enhanced" element={isAuthenticated ? <CustomFieldsEnhanced shop={shopDomain} showToast={showToast} /> : <Navigate to="/install" />} />
               <Route path="/inventory" element={isAuthenticated ? <Inventory showToast={showToast} /> : <Navigate to="/install" />} />
               <Route path="/settings" element={isAuthenticated ? <Settings showToast={showToast} /> : <Navigate to="/install" />} />
             </Routes>

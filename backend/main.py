@@ -29,18 +29,19 @@ from utils.exceptions import (
 from config import settings
 from utils.api_versioning import version_manager, get_api_configuration
 
-# Import API routes
-from simple_auth import router as auth_router
-from api.dashboard import router as dashboard_router
+# Import API routers
+from api.auth import router as auth_router
 from api.inventory import router as inventory_router
 from api.alerts import router as alerts_router
-from api.billing import router as billing_router
+from api.dashboard import router as dashboard_router
 from api.custom_fields import router as custom_fields_router
+from api.custom_fields_enhanced import router as custom_fields_enhanced_router
 from api.workflows import router as workflows_router
+from api.webhooks import router as webhooks_router
 from api.reports import router as reports_router
+from api.billing import router as billing_router
 from api.integrations import router as integrations_router
 from api.monitoring import router as monitoring_router
-from api.webhooks import router as webhooks_router
 from api.forecasting import router as forecasting_router
 from api.templates_simple import router as templates_router
 from api.locations import router as locations_router
@@ -339,6 +340,7 @@ app.include_router(inventory_router)
 app.include_router(alerts_router)
 app.include_router(billing_router)
 app.include_router(custom_fields_router)
+app.include_router(custom_fields_enhanced_router)
 app.include_router(workflows_router)
 app.include_router(reports_router)
 app.include_router(integrations_router)
