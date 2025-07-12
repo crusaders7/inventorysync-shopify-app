@@ -13,7 +13,8 @@ logger = logging.getLogger(__name__)
 class WebhookVerificationMiddleware:
     """Middleware to verify Shopify webhook signatures"""
     
-    def __init__(self, webhook_secret: str):
+    def __init__(self, app, webhook_secret: str):
+        self.app = app
         self.webhook_secret = webhook_secret
     
     async def __call__(self, request: Request, call_next):

@@ -82,7 +82,8 @@ class RateLimiter:
 class RateLimitMiddleware:
     """Middleware to enforce rate limits"""
     
-    def __init__(self, requests_per_minute: int = 60):
+    def __init__(self, app, requests_per_minute: int = 60):
+        self.app = app
         self.limiter = RateLimiter(requests_per_minute)
         
     async def __call__(self, request: Request, call_next):
