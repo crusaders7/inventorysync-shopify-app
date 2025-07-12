@@ -17,7 +17,7 @@ import boto3
 from sqlalchemy import text
 from sqlalchemy.orm import Session
 
-from database import get_db_session, engine
+from database import get_db, engine
 from utils.logging import logger
 from models import Store
 
@@ -42,7 +42,7 @@ class BackupManager:
         
         # Database configuration
         self.db_url = os.getenv('DATABASE_URL')
-        self.db_session = next(get_db_session())
+        self.db_session = next(get_db())
         
         # Backup retention settings
         self.retention_days = int(os.getenv('BACKUP_RETENTION_DAYS', '30'))

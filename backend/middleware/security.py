@@ -27,18 +27,33 @@ class SecurityHeadersMiddleware(BaseHTTPMiddleware):
         if settings.environment == "production":
             response.headers["Strict-Transport-Security"] = "max-age=31536000; includeSubDomains"
         
-        # CSP header
-        csp_directives = [
-            "default-src 'self'",
-            "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://cdn.shopify.com",
-            "style-src 'self' 'unsafe-inline' https://cdn.shopify.com",
-            "img-src 'self' data: https: blob:",
-            "font-src 'self' data: https://cdn.shopify.com",
-            "connect-src 'self' https://api.shopify.com wss:",
-            "frame-ancestors 'none'",
-            "base-uri 'self'",
-            "form-action 'self'"
-        ]
+        # CSP header for production - more restrictive
+        if settings.environment == "production":
+            csp_directives = [
+                "default-src 'self'",
+                "script-src 'self' https://cdn.shopify.com",
+                "style-src 'self' https://cdn.shopify.com",
+                "img-src 'self' data: https: blob:",
+                "font-src 'self' data: https://cdn.shopify.com",
+                "connect-src 'self' https://api.shopify.com wss:",
+                "frame-ancestors https://*.myshopify.com https://admin.shopify.com",
+                "base-uri 'self'",
+                "form-action 'self'",
+                "upgrade-insecure-requests"
+            ]
+        else:
+            # Development CSP - less restrictive
+            csp_directives = [
+                "default-src 'self'",
+                "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://cdn.shopify.com",
+                "style-src 'self' 'unsafe-inline' https://cdn.shopify.com",
+                "img-src 'self' data: https: blob:",
+                "font-src 'self' data: https://cdn.shopify.com",
+                "connect-src 'self' https://api.shopify.com wss: http://localhost:*",
+                "frame-ancestors 'none'",
+                "base-uri 'self'",
+                "form-action 'self'"
+            ]
         response.headers["Content-Security-Policy"] = "; ".join(csp_directives)
         
         return response

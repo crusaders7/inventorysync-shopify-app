@@ -1,0 +1,236 @@
+name: Deployment Notifications
+
+on:
+  workflow_run:
+    workflows: ["CI/CD Pipeline", "Deploy to Environments", "Security Scanning"]
+    types:
+      - completed
+  deployment_status:
+  release:
+    types: [published]
+
+jobs:
+  notify-deployment:
+    name: Notify Deployment Status
+    runs-on: ubuntu-latest
+    if: github.event_name == 'deployment_status'
+    
+    steps:
+    - name: Notify Slack - Deployment Started
+      if: github.event.deployment_status.state == 'pending'
+      uses: 8398a7/action-slack@v3
+      with:
+        status: custom
+        custom_payload: |
+          {
+            text: "🚀 Deployment Started",
+            attachments: [{
+              color: 'warning',
+              fields: [
+                {
+                  title: 'Environment',
+                  value: '${{ github.event.deployment.environment }}',
+                  short: true
+                },
+                {
+                  title: 'Ref',
+                  value: '${{ github.event.deployment.ref }}',
+                  short: true
+                },
+                {
+                  title: 'Actor',
+                  value: '${{ github.actor }}',
+                  short: true
+                },
+                {
+                  title: 'Time',
+                  value: '${{ github.event.deployment.created_at }}',
+                  short: true
+                }
+              ]
+            }]
+          }
+        webhook_url: ${{ secrets.SLACK_WEBHOOK }}
+    
+    - name: Notify Slack - Deployment Success
+      if: github.event.deployment_status.state == 'success'
+      uses: 8398a7/action-slack@v3
+      with:
+        status: custom
+        custom_payload: |
+          {
+            text: "✅ Deployment Successful",
+            attachments: [{
+              color: 'good',
+              fields: [
+                {
+                  title: 'Environment',
+                  value: '${{ github.event.deployment.environment }}',
+                  short: true
+                },
+                {
+                  title: 'URL',
+                  value: '${{ github.event.deployment_status.environment_url }}',
+                  short: true
+                },
+                {
+                  title: 'Duration',
+                  value: 'Completed in ${{ github.event.deployment_status.created_at }}',
+                  short: true
+                }
+              ]
+            }]
+          }
+        webhook_url: ${{ secrets.SLACK_WEBHOOK }}
+    
+    - name: Notify Slack - Deployment Failed
+      if: github.event.deployment_status.state == 'failure'
+      uses: 8398a7/action-slack@v3
+      with:
+        status: custom
+        custom_payload: |
+          {
+            text: "❌ Deployment Failed",
+            attachments: [{
+              color: 'danger',
+              fields: [
+                {
+                  title: 'Environment',
+                  value: '${{ github.event.deployment.environment }}',
+                  short: true
+                },
+                {
+                  title: 'Error',
+                  value: '${{ github.event.deployment_status.description }}',
+                  short: false
+                }
+              ]
+            }]
+          }
+        webhook_url: ${{ secrets.SLACK_WEBHOOK }}
+    
+    - name: Send Email Notification - Production
+      if: github.event.deployment.environment == 'production'
+      uses: dawidd6/action-send-mail@v3
+      with:
+        server_address: smtp.gmail.com
+        server_port: 587
+        username: ${{ secrets.EMAIL_USERNAME }}
+        password: ${{ secrets.EMAIL_PASSWORD }}
+        subject: "InventorySync - Production Deployment ${{ github.event.deployment_status.state }}"
+        to: ${{ secrets.TEAM_EMAIL }}
+        from: InventorySync CI/CD
+        body: |
+          Production deployment status: ${{ github.event.deployment_status.state }}
+          
+          Environment: ${{ github.event.deployment.environment }}
+          Ref: ${{ github.event.deployment.ref }}
+          URL: ${{ github.event.deployment_status.environment_url }}
+          Time: ${{ github.event.deployment_status.created_at }}
+          
+          View details: https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}
+
+  notify-workflow:
+    name: Notify Workflow Status
+    runs-on: ubuntu-latest
+    if: github.event_name == 'workflow_run'
+    
+    steps:
+    - name: Notify on Security Scan Failure
+      if: github.event.workflow.name == 'Security Scanning' && github.event.workflow_run.conclusion == 'failure'
+      uses: 8398a7/action-slack@v3
+      with:
+        status: custom
+        custom_payload: |
+          {
+            text: "🔒 Security Scan Alert",
+            attachments: [{
+              color: 'danger',
+              title: 'Security vulnerabilities detected',
+              text: 'Action required: Review security scan results',
+              fields: [
+                {
+                  title: 'Branch',
+                  value: '${{ github.event.workflow_run.head_branch }}',
+                  short: true
+                },
+                {
+                  title: 'Run',
+                  value: '<https://github.com/${{ github.repository }}/actions/runs/${{ github.event.workflow_run.id }}|View Results>',
+                  short: true
+                }
+              ]
+            }]
+          }
+        webhook_url: ${{ secrets.SLACK_WEBHOOK }}
+    
+    - name: Create GitHub Issue for Security Alert
+      if: github.event.workflow.name == 'Security Scanning' && github.event.workflow_run.conclusion == 'failure'
+      uses: actions/github-script@v6
+      with:
+        script: |
+          const issue = await github.rest.issues.create({
+            owner: context.repo.owner,
+            repo: context.repo.repo,
+            title: '🔒 Security Alert: Vulnerabilities Detected',
+            body: `Security scan failed on ${context.payload.workflow_run.head_branch}
+            
+            **Workflow Run:** [View Results](https://github.com/${context.repo.owner}/${context.repo.repo}/actions/runs/${context.payload.workflow_run.id})
+            **Branch:** ${context.payload.workflow_run.head_branch}
+            **Commit:** ${context.payload.workflow_run.head_sha}
+            
+            Please review the security scan results and address any vulnerabilities.`,
+            labels: ['security', 'high-priority']
+          });
+
+  notify-release:
+    name: Notify Release
+    runs-on: ubuntu-latest
+    if: github.event_name == 'release'
+    
+    steps:
+    - name: Notify Slack - New Release
+      uses: 8398a7/action-slack@v3
+      with:
+        status: custom
+        custom_payload: |
+          {
+            text: "🎉 New Release Published",
+            attachments: [{
+              color: 'good',
+              fields: [
+                {
+                  title: 'Version',
+                  value: '${{ github.event.release.tag_name }}',
+                  short: true
+                },
+                {
+                  title: 'Release Name',
+                  value: '${{ github.event.release.name }}',
+                  short: true
+                },
+                {
+                  title: 'Author',
+                  value: '${{ github.event.release.author.login }}',
+                  short: true
+                },
+                {
+                  title: 'Release Notes',
+                  value: '${{ github.event.release.html_url }}',
+                  short: true
+                }
+              ]
+            }]
+          }
+        webhook_url: ${{ secrets.SLACK_WEBHOOK }}
+    
+    - name: Notify Discord
+      uses: sarisia/actions-status-discord@v1
+      with:
+        webhook: ${{ secrets.DISCORD_WEBHOOK }}
+        title: "New Release: ${{ github.event.release.tag_name }}"
+        description: |
+          **${{ github.event.release.name }}**
+          
+          [View Release](${{ github.event.release.html_url }})
+        color: 0x00ff00

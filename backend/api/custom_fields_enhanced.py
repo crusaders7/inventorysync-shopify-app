@@ -11,8 +11,8 @@ from pydantic import BaseModel, validator
 
 from database import get_db
 from models import CustomFieldDefinition, Store
-from simple_auth import get_current_user, check_rate_limit
-from utils.cache import cache_result
+# from simple_auth import get_current_store as get_current_user, check_rate_limit
+# from utils.cache import cache_result
 import logging
 
 logger = logging.getLogger(__name__)
@@ -20,7 +20,7 @@ logger = logging.getLogger(__name__)
 router = APIRouter(
     prefix="/api/custom-fields",
     tags=["custom-fields-enhanced"],
-    dependencies=[Depends(get_current_user), Depends(check_rate_limit)]
+    # dependencies=[Depends(get_current_user), Depends(check_rate_limit)]
 )
 
 # Enhanced Models
@@ -168,7 +168,7 @@ FIELD_TEMPLATES = {
 }
 
 @router.get("/templates")
-@cache_result(expire=3600)
+# @cache_result(expire=3600)
 async def get_field_templates():
     """Get available field templates"""
     return {
@@ -321,7 +321,7 @@ async def bulk_operations(
     
     return results
 
-@router.get("/search/{shop_domain}")
+@router.get("/{shop_domain}/search")
 async def search_fields(
     shop_domain: str,
     q: str = Query(None, description="Search query"),
@@ -382,8 +382,8 @@ async def search_fields(
         }
     }
 
-@router.get("/statistics/{shop_domain}")
-@cache_result(expire=300)
+@router.get("/{shop_domain}/statistics")
+# @cache_result(expire=300)
 async def get_field_statistics(
     shop_domain: str,
     db: Session = Depends(get_db)

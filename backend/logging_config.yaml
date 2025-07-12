@@ -1,0 +1,65 @@
+version: 1
+disable_existing_loggers: false
+
+formatters:
+  default:
+    format: '%(asctime)s - %(name)s - %(levelname)s - %(message)s'
+    datefmt: '%Y-%m-%d %H:%M:%S'
+  
+  json:
+    class: pythonjsonlogger.jsonlogger.JsonFormatter
+    format: '%(asctime)s %(name)s %(levelname)s %(message)s'
+  
+  access:
+    format: '%(asctime)s - %(client_addr)s - "%(request_line)s" %(status_code)s'
+
+handlers:
+  console:
+    class: logging.StreamHandler
+    level: INFO
+    formatter: json
+    stream: ext://sys.stdout
+  
+  error_file:
+    class: logging.handlers.RotatingFileHandler
+    level: ERROR
+    formatter: json
+    filename: /tmp/error.log
+    maxBytes: 10485760  # 10MB
+    backupCount: 5
+  
+  access:
+    class: logging.StreamHandler
+    level: INFO
+    formatter: access
+    stream: ext://sys.stdout
+
+loggers:
+  uvicorn:
+    level: INFO
+    handlers: [console]
+    propagate: no
+  
+  uvicorn.error:
+    level: INFO
+    handlers: [console, error_file]
+    propagate: no
+  
+  uvicorn.access:
+    level: INFO
+    handlers: [access]
+    propagate: no
+  
+  inventorysync:
+    level: INFO
+    handlers: [console, error_file]
+    propagate: no
+  
+  sqlalchemy.engine:
+    level: WARNING
+    handlers: [console]
+    propagate: no
+
+root:
+  level: INFO
+  handlers: [console]

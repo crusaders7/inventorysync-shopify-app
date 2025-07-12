@@ -9,7 +9,7 @@ from typing import Dict, List, Any, Optional, Tuple
 from sqlalchemy import text, inspect
 from sqlalchemy.orm import Session
 from sqlalchemy.engine import Engine
-from database import get_db_session, engine
+from database import get_db, engine
 from models import (
     Store, Product, ProductVariant, InventoryItem, Alert, 
     CustomFieldDefinition, WorkflowRule, Location, InventoryMovement
@@ -22,7 +22,7 @@ class DatabaseOptimizer:
     """Database performance analysis and optimization utilities"""
     
     def __init__(self, db_session: Session = None):
-        self.db_session = db_session or next(get_db_session())
+        self.db_session = db_session or next(get_db())
         self.engine = engine
     
     def analyze_query_performance(self, query: str, params: Dict = None) -> Dict[str, Any]:

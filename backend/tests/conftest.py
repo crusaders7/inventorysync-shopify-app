@@ -17,7 +17,7 @@ from httpx import AsyncClient
 # Import our application components
 from main import app
 from database import Base, get_db, AsyncSessionLocal
-from models import Store, Product, ProductVariant, InventoryItem, Alert, CustomFieldDefinition, WorkflowRule
+from models import Store, Product, ProductVariant, InventoryItem, Alert, CustomFieldDefinition, WorkflowRule, Location
 from utils.logging import logger
 
 
@@ -95,7 +95,9 @@ async def async_client(db_session):
     
     app.dependency_overrides[get_db] = override_get_db
     
-    async with AsyncClient(app=app, base_url="http://test") as test_client:
+    from httpx import ASGITransport
+    transport = ASGITransport(app=app)
+    async with AsyncClient(transport=transport, base_url="http://test") as test_client:
         yield test_client
     
     app.dependency_overrides.clear()
@@ -109,14 +111,14 @@ async def async_client(db_session):
 def sample_store(db_session):
     """Create a sample store for testing"""
     store = Store(
-        shopify_store_id="12345",
-        shop_domain="test-store.myshopify.com",
-        store_name="Test Store",
+        shopify_domain="test-store.myshopify.com",
+        shop_name="Test Store",
         currency="USD",
         timezone="UTC",
         subscription_plan="starter",
         subscription_status="active",
-        plan_price=49.0
+        plan_price=49.0,
+        access_token="test_token_123"
     )
     db_session.add(store)
     db_session.commit()
@@ -148,7 +150,6 @@ def sample_product(db_session, sample_store):
 def sample_variant(db_session, sample_product):
     """Create a sample product variant for testing"""
     variant = ProductVariant(
-        store_id=sample_product.store_id,
         product_id=sample_product.id,
         shopify_variant_id="var_456",
         title="Default Title",
@@ -165,18 +166,38 @@ def sample_variant(db_session, sample_product):
 
 
 @pytest.fixture
-def sample_inventory_item(db_session, sample_variant):
+def sample_location(db_session, sample_store):
+    """Create a sample location for testing"""
+    location = Location(
+        store_id=sample_store.id,
+        shopify_location_id="loc_123",
+        name="Main Warehouse",
+        address="123 Main St",
+        city="New York",
+        country="US",
+        is_active=True,
+        manages_inventory=True
+    )
+    db_session.add(location)
+    db_session.commit()
+    db_session.refresh(location)
+    return location
+
+
+@pytest.fixture
+def sample_inventory_item(db_session, sample_variant, sample_location):
     """Create a sample inventory item for testing"""
+    # Get store_id from the product through the variant
+    product = db_session.query(Product).filter_by(id=sample_variant.product_id).first()
     inventory = InventoryItem(
-        store_id=sample_variant.store_id,
+        store_id=product.store_id,
         variant_id=sample_variant.id,
-        location_id=1,
+        location_id=sample_location.id,
         available_quantity=50,
         on_hand_quantity=55,
         committed_quantity=5,
         reorder_point=20,
         reorder_quantity=100,
-        cost_per_item=45.00,
         custom_data={"warehouse": "Main", "section": "A1"}
     )
     db_session.add(inventory)

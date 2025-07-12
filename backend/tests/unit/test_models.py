@@ -21,7 +21,7 @@ class TestTimestampMixin:
         """Test that timestamps are automatically populated"""
         store = Store(
             shopify_store_id="test_123",
-            shop_domain="test.myshopify.com",
+            shopify_domain="test.myshopify.com",
             store_name="Test Store"
         )
         db_session.add(store)
@@ -36,7 +36,7 @@ class TestTimestampMixin:
         """Test that updated_at changes when record is modified"""
         store = Store(
             shopify_store_id="test_123",
-            shop_domain="test.myshopify.com",
+            shopify_domain="test.myshopify.com",
             store_name="Test Store"
         )
         db_session.add(store)
@@ -61,7 +61,7 @@ class TestStore:
         """Test creating a store"""
         store = Store(
             shopify_store_id="12345",
-            shop_domain="test-store.myshopify.com",
+            shopify_domain="test-store.myshopify.com",
             store_name="Test Store",
             currency="USD",
             timezone="UTC",
@@ -73,7 +73,7 @@ class TestStore:
         
         assert store.id is not None
         assert store.shopify_store_id == "12345"
-        assert store.shop_domain == "test-store.myshopify.com"
+        assert store.shopify_domain == "test-store.myshopify.com"
         assert store.subscription_plan == "starter"
     
     def test_store_unique_constraints(self, db_session):
@@ -81,7 +81,7 @@ class TestStore:
         # Create first store
         store1 = Store(
             shopify_store_id="12345",
-            shop_domain="store1.myshopify.com",
+            shopify_domain="store1.myshopify.com",
             store_name="Store 1"
         )
         db_session.add(store1)
@@ -90,7 +90,7 @@ class TestStore:
         # Try to create store with same shopify_store_id
         store2 = Store(
             shopify_store_id="12345",  # Same ID
-            shop_domain="store2.myshopify.com",
+            shopify_domain="store2.myshopify.com",
             store_name="Store 2"
         )
         db_session.add(store2)
@@ -102,7 +102,7 @@ class TestStore:
         """Test store default values"""
         store = Store(
             shopify_store_id="12345",
-            shop_domain="test.myshopify.com",
+            shopify_domain="test.myshopify.com",
             store_name="Test Store"
         )
         db_session.add(store)
@@ -120,7 +120,7 @@ class TestStore:
         """Test store billing information"""
         store = Store(
             shopify_store_id="12345",
-            shop_domain="test.myshopify.com",
+            shopify_domain="test.myshopify.com",
             store_name="Test Store",
             subscription_plan="growth",
             subscription_status="active",

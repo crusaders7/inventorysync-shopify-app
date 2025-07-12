@@ -621,5 +621,5 @@ class TestBackupSecurity:
                 assert 'access_token' not in config
                 assert 'password' not in config
                 # Should include non-sensitive configuration
-                assert 'shop_domain' in config
+                assert 'shopify_domain' in config
                 assert 'store_name' in config

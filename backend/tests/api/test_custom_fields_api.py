@@ -28,7 +28,7 @@ class TestCustomFieldsAPI:
         }
         
         response = client.post(
-            f"/api/custom-fields/{sample_store.shop_domain}",
+            f"/api/custom-fields/{sample_store.shopify_domain}",
             json=field_data,
             headers=auth_headers
         )
@@ -51,7 +51,7 @@ class TestCustomFieldsAPI:
         }
         
         response = client.post(
-            f"/api/custom-fields/{sample_store.shop_domain}",
+            f"/api/custom-fields/{sample_store.shopify_domain}",
             json=field_data,
             headers=auth_headers
         )
@@ -70,7 +70,7 @@ class TestCustomFieldsAPI:
         }
         
         response = client.post(
-            f"/api/custom-fields/{sample_store.shop_domain}",
+            f"/api/custom-fields/{sample_store.shopify_domain}",
             json=field_data,
             headers=auth_headers
         )
@@ -82,7 +82,7 @@ class TestCustomFieldsAPI:
     def test_get_custom_fields(self, client, sample_store, sample_custom_field, auth_headers):
         """Test retrieving custom fields"""
         response = client.get(
-            f"/api/custom-fields/{sample_store.shop_domain}",
+            f"/api/custom-fields/{sample_store.shopify_domain}",
             headers=auth_headers
         )
         
@@ -111,14 +111,14 @@ class TestCustomFieldsAPI:
         }
         
         # Create fields
-        client.post(f"/api/custom-fields/{sample_store.shop_domain}", 
+        client.post(f"/api/custom-fields/{sample_store.shopify_domain}", 
                     json=field_data_1, headers=auth_headers)
-        client.post(f"/api/custom-fields/{sample_store.shop_domain}", 
+        client.post(f"/api/custom-fields/{sample_store.shopify_domain}", 
                     json=field_data_2, headers=auth_headers)
         
         # Filter by entity type
         response = client.get(
-            f"/api/custom-fields/{sample_store.shop_domain}?entity_type=product",
+            f"/api/custom-fields/{sample_store.shopify_domain}?entity_type=product",
             headers=auth_headers
         )
         
@@ -139,7 +139,7 @@ class TestCustomFieldsAPI:
         }
         
         response = client.put(
-            f"/api/custom-fields/{sample_store.shop_domain}/{sample_custom_field.id}",
+            f"/api/custom-fields/{sample_store.shopify_domain}/{sample_custom_field.id}",
             json=update_data,
             headers=auth_headers
         )
@@ -152,7 +152,7 @@ class TestCustomFieldsAPI:
     def test_delete_custom_field(self, client, sample_store, sample_custom_field, auth_headers):
         """Test deleting a custom field"""
         response = client.delete(
-            f"/api/custom-fields/{sample_store.shop_domain}/{sample_custom_field.id}",
+            f"/api/custom-fields/{sample_store.shopify_domain}/{sample_custom_field.id}",
             headers=auth_headers
         )
         
@@ -162,7 +162,7 @@ class TestCustomFieldsAPI:
         
         # Verify field is deleted/deactivated
         get_response = client.get(
-            f"/api/custom-fields/{sample_store.shop_domain}",
+            f"/api/custom-fields/{sample_store.shopify_domain}",
             headers=auth_headers
         )
         fields = get_response.json()["fields"]
@@ -172,7 +172,7 @@ class TestCustomFieldsAPI:
     def test_apply_industry_template(self, client, sample_store, auth_headers):
         """Test applying industry template"""
         response = client.post(
-            f"/api/custom-fields/{sample_store.shop_domain}/templates/fashion",
+            f"/api/custom-fields/{sample_store.shopify_domain}/templates/fashion",
             headers=auth_headers
         )
         
@@ -184,7 +184,7 @@ class TestCustomFieldsAPI:
         
         # Verify fields were actually created
         get_response = client.get(
-            f"/api/custom-fields/{sample_store.shop_domain}",
+            f"/api/custom-fields/{sample_store.shopify_domain}",
             headers=auth_headers
         )
         fields = get_response.json()["fields"]
@@ -198,7 +198,7 @@ class TestCustomFieldsAPI:
     def test_apply_invalid_template(self, client, sample_store, auth_headers):
         """Test applying invalid industry template"""
         response = client.post(
-            f"/api/custom-fields/{sample_store.shop_domain}/templates/invalid_template",
+            f"/api/custom-fields/{sample_store.shopify_domain}/templates/invalid_template",
             headers=auth_headers
         )
         
@@ -210,7 +210,7 @@ class TestCustomFieldsAPI:
         """Test custom field usage is tracked"""
         # Get initial usage
         response = client.get(
-            f"/api/custom-fields/{sample_store.shop_domain}/{sample_custom_field.id}",
+            f"/api/custom-fields/{sample_store.shopify_domain}/{sample_custom_field.id}",
             headers=auth_headers
         )
         initial_usage = response.json()["usage_count"]
@@ -218,13 +218,13 @@ class TestCustomFieldsAPI:
         # Simulate field usage (this would typically happen when products are updated)
         # For testing, we'll call an endpoint that increments usage
         usage_response = client.post(
-            f"/api/custom-fields/{sample_store.shop_domain}/{sample_custom_field.id}/increment-usage",
+            f"/api/custom-fields/{sample_store.shopify_domain}/{sample_custom_field.id}/increment-usage",
             headers=auth_headers
         )
         
         # Check usage increased
         response = client.get(
-            f"/api/custom-fields/{sample_store.shop_domain}/{sample_custom_field.id}",
+            f"/api/custom-fields/{sample_store.shopify_domain}/{sample_custom_field.id}",
             headers=auth_headers
         )
         new_usage = response.json()["usage_count"]
@@ -244,7 +244,7 @@ class TestCustomFieldsAPI:
         }
         
         response = client.post(
-            f"/api/custom-fields/{sample_store.shop_domain}",
+            f"/api/custom-fields/{sample_store.shopify_domain}",
             json=field_data,
             headers=auth_headers
         )
@@ -262,7 +262,7 @@ class TestCustomFieldsAPI:
         }
         
         response = client.post(
-            f"/api/custom-fields/{sample_store.shop_domain}",
+            f"/api/custom-fields/{sample_store.shopify_domain}",
             json=field_data,
             headers=auth_headers
         )
@@ -281,7 +281,7 @@ class TestCustomFieldsAPI:
         }
         
         response = client.post(
-            f"/api/custom-fields/{sample_store.shop_domain}",
+            f"/api/custom-fields/{sample_store.shopify_domain}",
             json=field_data,
             headers=auth_headers
         )
@@ -289,10 +289,10 @@ class TestCustomFieldsAPI:
     
     def test_unauthorized_access(self, client, sample_store):
         """Test unauthorized access to custom fields"""
-        response = client.get(f"/api/custom-fields/{sample_store.shop_domain}")
+        response = client.get(f"/api/custom-fields/{sample_store.shopify_domain}")
         assert response.status_code == 401
     
-    def test_invalid_shop_domain(self, client, auth_headers):
+    def test_invalid_shopify_domain(self, client, auth_headers):
         """Test accessing custom fields for invalid shop"""
         response = client.get(
             "/api/custom-fields/invalid-shop.myshopify.com",
@@ -311,7 +311,7 @@ class TestCustomFieldsAPI:
         }
         
         response = client.post(
-            f"/api/custom-fields/{sample_store.shop_domain}",
+            f"/api/custom-fields/{sample_store.shopify_domain}",
             json=field_data,
             headers=auth_headers
         )
@@ -332,7 +332,7 @@ class TestCustomFieldsAPI:
         
         # Create field asynchronously
         response = await async_client.post(
-            f"/api/custom-fields/{sample_store.shop_domain}",
+            f"/api/custom-fields/{sample_store.shopify_domain}",
             json=field_data,
             headers=auth_headers
         )
@@ -341,7 +341,7 @@ class TestCustomFieldsAPI:
         
         # Get fields asynchronously
         response = await async_client.get(
-            f"/api/custom-fields/{sample_store.shop_domain}",
+            f"/api/custom-fields/{sample_store.shopify_domain}",
             headers=auth_headers
         )
         
@@ -399,7 +399,7 @@ class TestCustomFieldsPerformance:
         
         # Create fields in bulk
         response = client.post(
-            f"/api/custom-fields/{sample_store.shop_domain}/bulk",
+            f"/api/custom-fields/{sample_store.shopify_domain}/bulk",
             json={"fields": fields_data},
             headers=auth_headers
         )
@@ -414,7 +414,7 @@ class TestCustomFieldsPerformance:
         performance_timer.start()
         
         response = client.get(
-            f"/api/custom-fields/{sample_store.shop_domain}",
+            f"/api/custom-fields/{sample_store.shopify_domain}",
             headers=auth_headers
         )
         
@@ -444,7 +444,7 @@ class TestCustomFieldsSecurity:
         }
         
         response = client.post(
-            f"/api/custom-fields/{sample_store.shop_domain}",
+            f"/api/custom-fields/{sample_store.shopify_domain}",
             json=field_data,
             headers=auth_headers
         )

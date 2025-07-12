@@ -18,6 +18,7 @@ from datetime import datetime
 # Import our utilities
 from utils.logging import logger
 from utils.validation import ShopDomainValidator
+from utils.cache import cache, cached
 from config import settings
 
 logger = logging.getLogger(__name__)
@@ -147,33 +148,38 @@ class ShopifyClient:
             )
     
     # Product Management
+    @cached(ttl=300, key_prefix="shopify:products")
     async def get_products(self, limit: int = 50, page_info: Optional[str] = None) -> Dict:
-        """Get products from Shopify store"""
+        """Get products from Shopify store with caching (5 min TTL)"""
         params = {"limit": limit}
         if page_info:
             params["page_info"] = page_info
             
         return await self._make_request("GET", "products.json", params=params)
     
+    @cached(ttl=300, key_prefix="shopify:product")
     async def get_product(self, product_id: str) -> Dict:
-        """Get single product by ID"""
+        """Get single product by ID with caching (5 min TTL)"""
         return await self._make_request("GET", f"products/{product_id}.json")
     
+    @cached(ttl=300, key_prefix="shopify:variants")
     async def get_product_variants(self, product_id: str) -> Dict:
-        """Get variants for a specific product"""
+        """Get variants for a specific product with caching (5 min TTL)"""
         return await self._make_request("GET", f"products/{product_id}/variants.json")
     
     # Inventory Management
+    @cached(ttl=60, key_prefix="shopify:inventory_levels")
     async def get_inventory_levels(self, location_id: Optional[str] = None) -> Dict:
-        """Get inventory levels"""
+        """Get inventory levels with caching (1 min TTL for fresher data)"""
         params = {}
         if location_id:
             params["location_ids"] = location_id
             
         return await self._make_request("GET", "inventory_levels.json", params=params)
     
+    @cached(ttl=300, key_prefix="shopify:inventory_item")
     async def get_inventory_item(self, inventory_item_id: str) -> Dict:
-        """Get inventory item details"""
+        """Get inventory item details with caching (5 min TTL)"""
         return await self._make_request("GET", f"inventory_items/{inventory_item_id}.json")
     
     async def update_inventory_level(
@@ -188,15 +194,23 @@ class ShopifyClient:
             "inventory_item_id": inventory_item_id,
             "available": available
         }
-        return await self._make_request("POST", "inventory_levels/adjust.json", data=data)
+        result = await self._make_request("POST", "inventory_levels/adjust.json", data=data)
+        
+        # Invalidate related caches after update
+        await cache.delete_pattern(f"shopify:inventory_levels:*")
+        await cache.delete_pattern(f"shopify:inventory_item:{inventory_item_id}*")
+        
+        return result
     
     # Location Management
+    @cached(ttl=3600, key_prefix="shopify:locations")
     async def get_locations(self) -> Dict:
-        """Get all store locations"""
+        """Get all store locations with caching (1 hour TTL)"""
         return await self._make_request("GET", "locations.json")
     
+    @cached(ttl=3600, key_prefix="shopify:location")
     async def get_location(self, location_id: str) -> Dict:
-        """Get specific location details"""
+        """Get specific location details with caching (1 hour TTL)"""
         return await self._make_request("GET", f"locations/{location_id}.json")
     
     # Shop Information

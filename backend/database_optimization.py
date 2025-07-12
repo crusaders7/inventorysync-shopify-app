@@ -14,76 +14,103 @@ OPTIMIZATION_QUERIES = [
     # Indexes for performance
     """
     -- Products table indexes
-    CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_products_sku ON products(sku);
-    CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_products_shopify_id ON products(shopify_product_id);
-    CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_products_barcode ON products(barcode);
+    CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_products_store_id ON products(store_id);
+    CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_products_shopify_product_id ON products(shopify_product_id);
+    CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_products_handle ON products(handle);
     CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_products_vendor ON products(vendor);
     CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_products_status ON products(status);
-    CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_products_store_id ON products(store_id);
     CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_products_updated_at ON products(updated_at);
+    CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_products_store_status ON products(store_id, status);
     """,
     
     """
-    -- Inventory table indexes
-    CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_inventory_product_id ON inventory(product_id);
-    CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_inventory_location_id ON inventory(location_id);
-    CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_inventory_quantity ON inventory(available_quantity);
-    CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_inventory_updated_at ON inventory(last_updated);
-    CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_inventory_product_location ON inventory(product_id, location_id);
+    -- Product variants table indexes
+    CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_variants_product_id ON product_variants(product_id);
+    CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_variants_shopify_variant_id ON product_variants(shopify_variant_id);
+    CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_variants_sku ON product_variants(sku);
+    CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_variants_barcode ON product_variants(barcode);
+    CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_variants_updated_at ON product_variants(updated_at);
+    """,
+    
+    """
+    -- Inventory items table indexes
+    CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_inventory_items_store_id ON inventory_items(store_id);
+    CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_inventory_items_location_id ON inventory_items(location_id);
+    CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_inventory_items_variant_id ON inventory_items(variant_id);
+    CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_inventory_items_available_quantity ON inventory_items(available_quantity);
+    CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_inventory_items_reorder_point ON inventory_items(reorder_point);
+    CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_inventory_items_store_location ON inventory_items(store_id, location_id);
+    CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_inventory_items_variant_location ON inventory_items(variant_id, location_id);
     """,
     
     """
     -- Alerts table indexes
-    CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_alerts_product_id ON alerts(product_id);
-    CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_alerts_type ON alerts(alert_type);
-    CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_alerts_status ON alerts(status);
-    CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_alerts_priority ON alerts(priority);
+    CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_alerts_store_id ON alerts(store_id);
+    CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_alerts_alert_type ON alerts(alert_type);
+    CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_alerts_severity ON alerts(severity);
+    CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_alerts_is_resolved ON alerts(is_resolved);
     CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_alerts_created_at ON alerts(created_at);
-    CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_alerts_resolved_at ON alerts(resolved_at);
+    CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_alerts_store_type ON alerts(store_id, alert_type);
+    CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_alerts_active ON alerts(store_id, is_resolved) WHERE is_resolved = false;
     """,
     
     """
-    -- Workflows table indexes
-    CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_workflows_store_id ON workflows(store_id);
-    CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_workflows_enabled ON workflows(enabled);
-    CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_workflows_trigger_type ON workflows(trigger_type);
-    CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_workflows_last_run ON workflows(last_run);
+    -- Workflow rules table indexes
+    CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_workflow_rules_store_id ON workflow_rules(store_id);
+    CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_workflow_rules_trigger_event ON workflow_rules(trigger_event);
+    CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_workflow_rules_is_active ON workflow_rules(is_active);
+    CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_workflow_rules_priority ON workflow_rules(priority);
+    CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_workflow_rules_last_executed_at ON workflow_rules(last_executed_at);
+    CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_workflow_rules_store_active ON workflow_rules(store_id, is_active) WHERE is_active = true;
     """,
     
     """
-    -- Custom fields indexes
-    CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_custom_fields_store_id ON custom_fields(store_id);
-    CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_custom_fields_field_type ON custom_fields(field_type);
-    CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_custom_fields_active ON custom_fields(active);
+    -- Custom field definitions indexes
+    CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_custom_field_defs_store_id ON custom_field_definitions(store_id);
+    CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_custom_field_defs_field_type ON custom_field_definitions(field_type);
+    CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_custom_field_defs_target_entity ON custom_field_definitions(target_entity);
+    CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_custom_field_defs_is_active ON custom_field_definitions(is_active);
+    CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_custom_field_defs_store_entity ON custom_field_definitions(store_id, target_entity);
     """,
     
     """
     -- Inventory movements indexes
-    CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_movements_product_id ON inventory_movements(product_id);
-    CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_movements_location_id ON inventory_movements(location_id);
+    CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_movements_inventory_item_id ON inventory_movements(inventory_item_id);
     CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_movements_movement_type ON inventory_movements(movement_type);
-    CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_movements_timestamp ON inventory_movements(timestamp);
+    CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_movements_created_at ON inventory_movements(created_at);
+    CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_movements_item_date ON inventory_movements(inventory_item_id, created_at DESC);
     """,
     
     """
-    -- Reports indexes
-    CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_reports_store_id ON reports(store_id);
-    CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_reports_type ON reports(report_type);
-    CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_reports_created_at ON reports(created_at);
-    CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_reports_status ON reports(status);
+    -- Stores table indexes
+    CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_stores_shopify_domain ON stores(shopify_domain);
+    CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_stores_subscription_status ON stores(subscription_status);
+    CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_stores_is_active ON stores(is_active);
+    CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_stores_created_at ON stores(created_at);
+    """,
+    
+    """
+    -- Locations table indexes
+    CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_locations_store_id ON locations(store_id);
+    CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_locations_shopify_location_id ON locations(shopify_location_id);
+    CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_locations_is_active ON locations(is_active);
+    CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_locations_store_active ON locations(store_id, is_active) WHERE is_active = true;
     """,
     
     """
     -- JSONB indexes for custom data
-    CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_products_custom_fields_gin ON products USING gin(custom_fields);
-    CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_inventory_metadata_gin ON inventory USING gin(metadata);
+    CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_products_custom_data_gin ON products USING gin(custom_data);
+    CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_variants_custom_data_gin ON product_variants USING gin(custom_data);
+    CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_inventory_custom_data_gin ON inventory_items USING gin(custom_data);
+    CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_alerts_custom_data_gin ON alerts USING gin(custom_data);
     """,
     
     """
     -- Partial indexes for common queries
-    CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_alerts_active ON alerts(store_id, created_at) WHERE status = 'active';
-    CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_inventory_low_stock ON inventory(product_id) WHERE available_quantity < 10;
+    CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_inventory_low_stock ON inventory_items(store_id, variant_id) WHERE available_quantity < reorder_point;
+    CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_inventory_out_of_stock ON inventory_items(store_id, variant_id) WHERE available_quantity = 0;
     CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_products_active ON products(store_id, updated_at) WHERE status = 'active';
+    CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_workflow_rules_active ON workflow_rules(store_id, trigger_event) WHERE is_active = true;
     """
 ]
 
@@ -109,19 +136,29 @@ PERFORMANCE_SETTINGS = [
 
 # Table statistics update
 ANALYZE_QUERIES = [
+    "ANALYZE stores;",
     "ANALYZE products;",
-    "ANALYZE inventory;",
+    "ANALYZE product_variants;",
+    "ANALYZE inventory_items;",
+    "ANALYZE locations;",
     "ANALYZE alerts;",
-    "ANALYZE workflows;",
-    "ANALYZE custom_fields;",
-    "ANALYZE inventory_movements;",
-    "ANALYZE reports;",
-    "ANALYZE stores;"
+    "ANALYZE workflow_rules;",
+    "ANALYZE custom_field_definitions;",
+    "ANALYZE inventory_movements;"
 ]
 
 async def run_optimization():
     """Run database optimization"""
-    async with engine.begin() as conn:
+    from sqlalchemy.ext.asyncio import create_async_engine
+    from config import get_database_url
+    
+    # Create async engine
+    DATABASE_URL = get_database_url()
+    ASYNC_DATABASE_URL = DATABASE_URL.replace("postgresql://", "postgresql+asyncpg://")
+    
+    async_engine = create_async_engine(ASYNC_DATABASE_URL, echo=False)
+    
+    async with async_engine.begin() as conn:
         logger.info("Starting database optimization...")
         
         # Create indexes
@@ -143,9 +180,20 @@ async def run_optimization():
                 logger.warning(f"Analyze warning: {e}")
         
         logger.info("Database optimization complete!")
+    
+    await async_engine.dispose()
 
 async def create_materialized_views():
     """Create materialized views for reporting"""
+    from sqlalchemy.ext.asyncio import create_async_engine
+    from config import get_database_url
+    
+    # Create async engine
+    DATABASE_URL = get_database_url()
+    ASYNC_DATABASE_URL = DATABASE_URL.replace("postgresql://", "postgresql+asyncpg://")
+    
+    async_engine = create_async_engine(ASYNC_DATABASE_URL, echo=False)
+    
     views = [
         """
         CREATE MATERIALIZED VIEW IF NOT EXISTS mv_inventory_summary AS
@@ -153,20 +201,24 @@ async def create_materialized_views():
             p.store_id,
             p.id as product_id,
             p.title,
-            p.sku,
             p.vendor,
+            v.id as variant_id,
+            v.sku,
+            v.title as variant_title,
             SUM(i.available_quantity) as total_quantity,
-            SUM(i.available_quantity * p.cost) as total_value,
+            SUM(i.available_quantity * v.cost_per_item) as total_value,
             COUNT(DISTINCT i.location_id) as location_count,
             MIN(i.available_quantity) as min_location_quantity,
             MAX(i.available_quantity) as max_location_quantity,
             p.updated_at
         FROM products p
-        LEFT JOIN inventory i ON p.id = i.product_id
-        GROUP BY p.store_id, p.id, p.title, p.sku, p.vendor, p.updated_at;
+        JOIN product_variants v ON p.id = v.product_id
+        LEFT JOIN inventory_items i ON v.id = i.variant_id
+        GROUP BY p.store_id, p.id, p.title, p.vendor, v.id, v.sku, v.title, p.updated_at;
         
-        CREATE UNIQUE INDEX ON mv_inventory_summary(product_id);
+        CREATE UNIQUE INDEX ON mv_inventory_summary(variant_id);
         CREATE INDEX ON mv_inventory_summary(store_id);
+        CREATE INDEX ON mv_inventory_summary(product_id);
         CREATE INDEX ON mv_inventory_summary(sku);
         """,
         
@@ -175,36 +227,41 @@ async def create_materialized_views():
         SELECT 
             store_id,
             alert_type,
-            priority,
-            status,
+            severity,
+            is_resolved,
             COUNT(*) as alert_count,
             MIN(created_at) as oldest_alert,
             MAX(created_at) as newest_alert
         FROM alerts
-        GROUP BY store_id, alert_type, priority, status;
+        GROUP BY store_id, alert_type, severity, is_resolved;
         
         CREATE INDEX ON mv_alert_summary(store_id);
         CREATE INDEX ON mv_alert_summary(alert_type);
+        CREATE INDEX ON mv_alert_summary(is_resolved);
         """,
         
         """
         CREATE MATERIALIZED VIEW IF NOT EXISTS mv_daily_movements AS
         SELECT 
-            store_id,
-            product_id,
-            DATE(timestamp) as movement_date,
-            movement_type,
-            SUM(quantity_change) as total_change,
+            i.store_id,
+            i.variant_id,
+            v.product_id,
+            DATE(m.created_at) as movement_date,
+            m.movement_type,
+            SUM(m.quantity_change) as total_change,
             COUNT(*) as movement_count
-        FROM inventory_movements
-        GROUP BY store_id, product_id, DATE(timestamp), movement_type;
+        FROM inventory_movements m
+        JOIN inventory_items i ON m.inventory_item_id = i.id
+        JOIN product_variants v ON i.variant_id = v.id
+        GROUP BY i.store_id, i.variant_id, v.product_id, DATE(m.created_at), m.movement_type;
         
         CREATE INDEX ON mv_daily_movements(store_id, movement_date);
+        CREATE INDEX ON mv_daily_movements(variant_id, movement_date);
         CREATE INDEX ON mv_daily_movements(product_id, movement_date);
         """
     ]
     
-    async with engine.begin() as conn:
+    async with async_engine.begin() as conn:
         logger.info("Creating materialized views...")
         for view in views:
             try:
@@ -212,6 +269,8 @@ async def create_materialized_views():
                 logger.info("Created materialized view")
             except Exception as e:
                 logger.warning(f"Materialized view warning: {e}")
+    
+    await async_engine.dispose()
 
 async def setup_partitioning():
     """Setup table partitioning for large tables"""

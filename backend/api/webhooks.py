@@ -1,16 +1,18 @@
 """
-Real-time webhook handlers for Shopify product and inventory updates
+Fixed webhook handlers for Shopify product and inventory updates
 """
 
 from fastapi import APIRouter, Request, HTTPException, Depends
 from fastapi.responses import JSONResponse
 import json
-import sqlite3
 import hmac
 import hashlib
 from datetime import datetime
 from typing import Dict, Any
 import os
+from sqlalchemy.orm import Session
+from database import get_db
+from models import Store, Product, ProductVariant
 
 router = APIRouter(prefix="/api/v1/webhooks", tags=["webhooks"])
 
@@ -27,7 +29,7 @@ def verify_webhook_signature(data: bytes, signature: str) -> bool:
     return hmac.compare_digest(computed_signature, signature.replace('sha256=', ''))
 
 @router.post("/products/create")
-async def product_create_webhook(request: Request):
+async def product_create_webhook(request: Request, db: Session = Depends(get_db)):
     """Handle product creation webhook"""
     try:
         # Get raw body and signature
@@ -49,305 +51,164 @@ async def product_create_webhook(request: Request):
         if not shop_domain:
             raise HTTPException(status_code=400, detail="Missing shop domain")
         
-        # Save to database
-        conn = sqlite3.connect('inventorysync_dev.db')
-        cursor = conn.cursor()
+        # Get store
+        store = db.query(Store).filter(Store.shopify_domain == shop_domain).first()
         
-        try:
-            # Get store ID
-            cursor.execute("SELECT id FROM stores WHERE shopify_domain = ?", (shop_domain,))
-            store_result = cursor.fetchone()
+        if not store:
+            raise HTTPException(status_code=404, detail="Store not found")
+        
+        # Check if product already exists
+        existing_product = db.query(Product).filter(
+            Product.store_id == store.id,
+            Product.shopify_product_id == str(product_data['id'])
+        ).first()
+        
+        if existing_product:
+            # Update existing product
+            existing_product.title = product_data.get('title', '')
+            existing_product.handle = product_data.get('handle', '')
+            existing_product.product_type = product_data.get('product_type', '')
+            existing_product.vendor = product_data.get('vendor', '')
+            existing_product.tags = ', '.join(product_data.get('tags', []))
+            existing_product.status = product_data.get('status', 'active')
+            existing_product.body_html = product_data.get('body_html', '')
+            existing_product.updated_at = datetime.utcnow()
+            product = existing_product
+        else:
+            # Create new product
+            product = Product(
+                store_id=store.id,
+                shopify_product_id=str(product_data['id']),
+                title=product_data.get('title', ''),
+                handle=product_data.get('handle', ''),
+                product_type=product_data.get('product_type', ''),
+                vendor=product_data.get('vendor', ''),
+                tags=', '.join(product_data.get('tags', [])),
+                status=product_data.get('status', 'active'),
+                body_html=product_data.get('body_html', ''),
+                created_at=datetime.utcnow(),
+                updated_at=datetime.utcnow()
+            )
+            db.add(product)
+        
+        db.flush()  # Get product.id
+        
+        # Save variants
+        for variant_data in product_data.get('variants', []):
+            existing_variant = db.query(ProductVariant).filter(
+                ProductVariant.shopify_variant_id == str(variant_data['id'])
+            ).first()
             
-            if not store_result:
-                raise HTTPException(status_code=404, detail="Store not found")
-            
-            store_id = store_result[0]
-            
-            # Save product
-            cursor.execute("""
-                INSERT OR REPLACE INTO products (
-                    store_id, shopify_product_id, title, handle, product_type, 
-                    vendor, tags, status, body_html, created_at, updated_at, published_at
-                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-            """, (
-                store_id,
-                product_data['id'],
-                product_data.get('title', ''),
-                product_data.get('handle', ''),
-                product_data.get('product_type', ''),
-                product_data.get('vendor', ''),
-                ', '.join(product_data.get('tags', [])),
-                product_data.get('status', 'active'),
-                product_data.get('body_html', ''),
-                product_data.get('created_at'),
-                product_data.get('updated_at'),
-                product_data.get('published_at')
-            ))
-            
-            product_db_id = cursor.lastrowid
-            
-            # Save variants
-            for variant in product_data.get('variants', []):
-                cursor.execute("""
-                    INSERT OR REPLACE INTO product_variants (
-                        product_id, shopify_variant_id, title, option1, option2, option3,
-                        sku, barcode, price, compare_at_price, weight, weight_unit,
-                        inventory_quantity, inventory_management, inventory_policy,
-                        created_at, updated_at
-                    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-                """, (
-                    product_db_id,
-                    variant['id'],
-                    variant.get('title', ''),
-                    variant.get('option1'),
-                    variant.get('option2'),
-                    variant.get('option3'),
-                    variant.get('sku', ''),
-                    variant.get('barcode', ''),
-                    float(variant.get('price', 0)),
-                    float(variant.get('compare_at_price', 0)) if variant.get('compare_at_price') else None,
-                    float(variant.get('weight', 0)),
-                    variant.get('weight_unit', 'kg'),
-                    int(variant.get('inventory_quantity', 0)),
-                    variant.get('inventory_management', ''),
-                    variant.get('inventory_policy', 'deny'),
-                    variant.get('created_at'),
-                    variant.get('updated_at')
-                ))
-            
-            conn.commit()
-            print(f"✅ Product saved to database: {product_data.get('title')}")
-            
-            return JSONResponse(content={"status": "success", "message": "Product created"})
-            
-        except Exception as e:
-            conn.rollback()
-            print(f"❌ Error saving product: {e}")
-            raise HTTPException(status_code=500, detail="Database error")
-        finally:
-            conn.close()
-            
+            if existing_variant:
+                # Update existing variant
+                existing_variant.title = variant_data.get('title', '')
+                existing_variant.option1 = variant_data.get('option1')
+                existing_variant.option2 = variant_data.get('option2')
+                existing_variant.option3 = variant_data.get('option3')
+                existing_variant.sku = variant_data.get('sku', '')
+                existing_variant.barcode = variant_data.get('barcode', '')
+                existing_variant.price = float(variant_data.get('price', 0))
+                existing_variant.compare_at_price = float(variant_data.get('compare_at_price', 0)) if variant_data.get('compare_at_price') else None
+                existing_variant.weight = float(variant_data.get('weight', 0))
+                existing_variant.weight_unit = variant_data.get('weight_unit', 'kg')
+                existing_variant.inventory_quantity = int(variant_data.get('inventory_quantity', 0))
+                existing_variant.inventory_management = variant_data.get('inventory_management', '')
+                existing_variant.inventory_policy = variant_data.get('inventory_policy', 'deny')
+                existing_variant.updated_at = datetime.utcnow()
+            else:
+                # Create new variant
+                variant = ProductVariant(
+                    product_id=product.id,
+                    shopify_variant_id=str(variant_data['id']),
+                    title=variant_data.get('title', ''),
+                    option1=variant_data.get('option1'),
+                    option2=variant_data.get('option2'),
+                    option3=variant_data.get('option3'),
+                    sku=variant_data.get('sku', ''),
+                    barcode=variant_data.get('barcode', ''),
+                    price=float(variant_data.get('price', 0)),
+                    compare_at_price=float(variant_data.get('compare_at_price', 0)) if variant_data.get('compare_at_price') else None,
+                    weight=float(variant_data.get('weight', 0)),
+                    weight_unit=variant_data.get('weight_unit', 'kg'),
+                    inventory_quantity=int(variant_data.get('inventory_quantity', 0)),
+                    inventory_management=variant_data.get('inventory_management', ''),
+                    inventory_policy=variant_data.get('inventory_policy', 'deny'),
+                    created_at=datetime.utcnow(),
+                    updated_at=datetime.utcnow()
+                )
+                db.add(variant)
+        
+        db.commit()
+        print(f"✅ Product saved to database: {product_data.get('title')}")
+        
+        return JSONResponse(content={"status": "success", "message": "Product created"})
+        
     except Exception as e:
+        db.rollback()
         print(f"❌ Webhook error: {e}")
         raise HTTPException(status_code=500, detail="Webhook processing failed")
 
 @router.post("/products/update")
-async def product_update_webhook(request: Request):
+async def product_update_webhook(request: Request, db: Session = Depends(get_db)):
     """Handle product update webhook"""
-    try:
-        # Get raw body and signature
-        body = await request.body()
-        signature = request.headers.get("X-Shopify-Hmac-Sha256", "")
-        
-        # Parse product data
-        product_data = json.loads(body)
-        
-        # Log the webhook
-        print(f"🔔 Product updated webhook: {product_data.get('title', 'Unknown')}")
-        
-        # Get store from shop domain
-        shop_domain = request.headers.get("X-Shopify-Shop-Domain")
-        if not shop_domain:
-            raise HTTPException(status_code=400, detail="Missing shop domain")
-        
-        # Update database
-        conn = sqlite3.connect('inventorysync_dev.db')
-        cursor = conn.cursor()
-        
-        try:
-            # Get store ID
-            cursor.execute("SELECT id FROM stores WHERE shopify_domain = ?", (shop_domain,))
-            store_result = cursor.fetchone()
-            
-            if not store_result:
-                raise HTTPException(status_code=404, detail="Store not found")
-            
-            store_id = store_result[0]
-            
-            # Update product
-            cursor.execute("""
-                UPDATE products SET
-                    title = ?, handle = ?, product_type = ?, vendor = ?, tags = ?,
-                    status = ?, body_html = ?, updated_at = ?, published_at = ?
-                WHERE store_id = ? AND shopify_product_id = ?
-            """, (
-                product_data.get('title', ''),
-                product_data.get('handle', ''),
-                product_data.get('product_type', ''),
-                product_data.get('vendor', ''),
-                ', '.join(product_data.get('tags', [])),
-                product_data.get('status', 'active'),
-                product_data.get('body_html', ''),
-                product_data.get('updated_at'),
-                product_data.get('published_at'),
-                store_id,
-                product_data['id']
-            ))
-            
-            # Update variants
-            for variant in product_data.get('variants', []):
-                cursor.execute("""
-                    UPDATE product_variants SET
-                        title = ?, option1 = ?, option2 = ?, option3 = ?, sku = ?,
-                        barcode = ?, price = ?, compare_at_price = ?, weight = ?,
-                        weight_unit = ?, inventory_quantity = ?, inventory_management = ?,
-                        inventory_policy = ?, updated_at = ?
-                    WHERE shopify_variant_id = ?
-                """, (
-                    variant.get('title', ''),
-                    variant.get('option1'),
-                    variant.get('option2'),
-                    variant.get('option3'),
-                    variant.get('sku', ''),
-                    variant.get('barcode', ''),
-                    float(variant.get('price', 0)),
-                    float(variant.get('compare_at_price', 0)) if variant.get('compare_at_price') else None,
-                    float(variant.get('weight', 0)),
-                    variant.get('weight_unit', 'kg'),
-                    int(variant.get('inventory_quantity', 0)),
-                    variant.get('inventory_management', ''),
-                    variant.get('inventory_policy', 'deny'),
-                    variant.get('updated_at'),
-                    variant['id']
-                ))
-            
-            conn.commit()
-            print(f"✅ Product updated in database: {product_data.get('title')}")
-            
-            return JSONResponse(content={"status": "success", "message": "Product updated"})
-            
-        except Exception as e:
-            conn.rollback()
-            print(f"❌ Error updating product: {e}")
-            raise HTTPException(status_code=500, detail="Database error")
-        finally:
-            conn.close()
-            
-    except Exception as e:
-        print(f"❌ Webhook error: {e}")
-        raise HTTPException(status_code=500, detail="Webhook processing failed")
+    return await product_create_webhook(request, db)  # Same logic for create/update
 
 @router.post("/products/delete")
-async def product_delete_webhook(request: Request):
+async def product_delete_webhook(request: Request, db: Session = Depends(get_db)):
     """Handle product deletion webhook"""
     try:
-        # Get raw body and signature
+        # Get raw body
         body = await request.body()
-        signature = request.headers.get("X-Shopify-Hmac-Sha256", "")
-        
-        # Parse product data
         product_data = json.loads(body)
         
-        # Log the webhook
-        print(f"🔔 Product deleted webhook: {product_data.get('title', 'Unknown')}")
-        
         # Get store from shop domain
         shop_domain = request.headers.get("X-Shopify-Shop-Domain")
         if not shop_domain:
             raise HTTPException(status_code=400, detail="Missing shop domain")
         
-        # Delete from database
-        conn = sqlite3.connect('inventorysync_dev.db')
-        cursor = conn.cursor()
+        # Get store
+        store = db.query(Store).filter(Store.shopify_domain == shop_domain).first()
+        if not store:
+            raise HTTPException(status_code=404, detail="Store not found")
         
-        try:
-            # Get store ID
-            cursor.execute("SELECT id FROM stores WHERE shopify_domain = ?", (shop_domain,))
-            store_result = cursor.fetchone()
-            
-            if not store_result:
-                raise HTTPException(status_code=404, detail="Store not found")
-            
-            store_id = store_result[0]
-            
-            # Delete product and variants (cascading)
-            cursor.execute("""
-                DELETE FROM products 
-                WHERE store_id = ? AND shopify_product_id = ?
-            """, (store_id, product_data['id']))
-            
-            conn.commit()
-            print(f"✅ Product deleted from database: {product_data.get('title')}")
-            
-            return JSONResponse(content={"status": "success", "message": "Product deleted"})
-            
-        except Exception as e:
-            conn.rollback()
-            print(f"❌ Error deleting product: {e}")
-            raise HTTPException(status_code=500, detail="Database error")
-        finally:
-            conn.close()
-            
+        # Delete product
+        product = db.query(Product).filter(
+            Product.store_id == store.id,
+            Product.shopify_product_id == str(product_data['id'])
+        ).first()
+        
+        if product:
+            db.delete(product)
+            db.commit()
+            print(f"✅ Product deleted: {product_data.get('id')}")
+        
+        return JSONResponse(content={"status": "success", "message": "Product deleted"})
+        
     except Exception as e:
-        print(f"❌ Webhook error: {e}")
+        db.rollback()
+        print(f"❌ Delete webhook error: {e}")
         raise HTTPException(status_code=500, detail="Webhook processing failed")
 
-@router.post("/orders/create")
-async def order_create_webhook(request: Request):
-    """Handle order creation webhook for inventory updates"""
+@router.post("/app/uninstalled")
+async def app_uninstalled_webhook(request: Request, db: Session = Depends(get_db)):
+    """Handle app uninstall webhook"""
     try:
-        # Get raw body and signature
-        body = await request.body()
-        signature = request.headers.get("X-Shopify-Hmac-Sha256", "")
-        
-        # Parse order data
-        order_data = json.loads(body)
-        
-        # Log the webhook
-        print(f"🔔 Order created webhook: {order_data.get('name', 'Unknown')}")
-        
-        # Get store from shop domain
+        # Get shop domain
         shop_domain = request.headers.get("X-Shopify-Shop-Domain")
         if not shop_domain:
             raise HTTPException(status_code=400, detail="Missing shop domain")
         
-        # Update inventory quantities
-        conn = sqlite3.connect('inventorysync_dev.db')
-        cursor = conn.cursor()
+        # Mark store as inactive
+        store = db.query(Store).filter(Store.shopify_domain == shop_domain).first()
+        if store:
+            store.is_active = False
+            store.uninstalled_at = datetime.utcnow()
+            db.commit()
+            print(f"✅ App uninstalled for store: {shop_domain}")
         
-        try:
-            # Get store ID
-            cursor.execute("SELECT id FROM stores WHERE shopify_domain = ?", (shop_domain,))
-            store_result = cursor.fetchone()
-            
-            if not store_result:
-                raise HTTPException(status_code=404, detail="Store not found")
-            
-            store_id = store_result[0]
-            
-            # Update inventory for each line item
-            for line_item in order_data.get('line_items', []):
-                variant_id = line_item.get('variant_id')
-                quantity = line_item.get('quantity', 0)
-                
-                if variant_id and quantity > 0:
-                    cursor.execute("""
-                        UPDATE product_variants 
-                        SET inventory_quantity = inventory_quantity - ?
-                        WHERE shopify_variant_id = ?
-                    """, (quantity, str(variant_id)))
-            
-            conn.commit()
-            print(f"✅ Inventory updated for order: {order_data.get('name')}")
-            
-            return JSONResponse(content={"status": "success", "message": "Order processed"})
-            
-        except Exception as e:
-            conn.rollback()
-            print(f"❌ Error processing order: {e}")
-            raise HTTPException(status_code=500, detail="Database error")
-        finally:
-            conn.close()
-            
+        return JSONResponse(content={"status": "success", "message": "App uninstalled"})
+        
     except Exception as e:
-        print(f"❌ Webhook error: {e}")
+        db.rollback()
+        print(f"❌ Uninstall webhook error: {e}")
         raise HTTPException(status_code=500, detail="Webhook processing failed")
-
-@router.get("/test")
-async def test_webhook_endpoint():
-    """Test webhook endpoint"""
-    return JSONResponse(content={
-        "status": "success",
-        "message": "Webhook endpoint is working",
-        "timestamp": datetime.now().isoformat()
-    })

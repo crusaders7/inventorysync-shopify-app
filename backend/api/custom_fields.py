@@ -2,14 +2,16 @@
 Custom Fields API - Simple implementation for testing
 """
 
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, HTTPException, Depends
 from fastapi.responses import JSONResponse
 from pydantic import BaseModel
 from typing import Optional, List, Dict, Any
 from datetime import datetime
 import json
-import sqlite3
 import re
+from sqlalchemy.orm import Session
+from database import get_db
+from models import Store, CustomFieldDefinition
 
 router = APIRouter(prefix="/api/custom-fields", tags=["custom-fields"])
 
@@ -18,27 +20,21 @@ class CustomFieldCreate(BaseModel):
     field_type: str
     display_name: str
     description: Optional[str] = ""
-    required: bool = False
+    required: Optional[bool] = False
+    is_required: Optional[bool] = False  # Alternative name for compatibility
     default_value: Optional[str] = ""
     validation_rules: Optional[Dict[str, Any]] = {}
-    category: str = "product"
+    category: Optional[str] = "product"
+    target_entity: Optional[str] = None  # Alternative name for category
 
 class CustomFieldUpdate(BaseModel):
     display_name: Optional[str] = None
     description: Optional[str] = None
     validation_rules: Optional[Dict[str, Any]] = None
 
-def get_store_id(shop_domain: str) -> int:
-    """Get store ID from domain"""
-    conn = sqlite3.connect('inventorysync_dev.db')
-    cursor = conn.cursor()
-    
-    try:
-        cursor.execute("SELECT id FROM stores WHERE shop_domain = ?", (shop_domain,))
-        result = cursor.fetchone()
-        return result[0] if result else None
-    finally:
-        conn.close()
+def get_store(shop_domain: str, db: Session) -> Optional[Store]:
+    """Get store from domain"""
+    return db.query(Store).filter(Store.shopify_domain == shop_domain).first()
 
 def validate_field_name(field_name: str) -> bool:
     """Validate field name format"""
@@ -131,64 +127,55 @@ async def get_custom_field_templates():
     })
 
 @router.post("/{shop_domain}")
-async def create_custom_field(shop_domain: str, field_data: CustomFieldCreate):
-    """Create a new custom field"""
+async def create_custom_field(shop_domain: str, field_data: CustomFieldCreate, db: Session = Depends(get_db)):
+    """Create a new custom field using SQLAlchemy"""
+    # Get store
+    store = get_store(shop_domain, db)
+    if not store:
+        raise HTTPException(status_code=404, detail="Store not found")
+
+    # Validate field name
+    if not validate_field_name(field_data.field_name):
+        raise HTTPException(status_code=400, detail="Invalid field name format")
+    
+    # Handle alternative field names
+    required = field_data.is_required if field_data.is_required is not None else field_data.required
+    category = field_data.target_entity if field_data.target_entity else field_data.category
+
+    # Create custom field definition
+    new_field = CustomFieldDefinition(
+        store_id=store.id,
+        field_name=field_data.field_name,
+        display_name=field_data.display_name,
+        field_type=field_data.field_type,
+        target_entity=category,  # This is "product", "variant", etc.
+        is_required=required,
+        default_value=field_data.default_value,
+        validation_rules=field_data.validation_rules,
+        help_text=field_data.description
+    )
+
     try:
-        # Get store ID
-        store_id = get_store_id(shop_domain)
-        if not store_id:
-            raise HTTPException(status_code=404, detail="Store not found")
-        
-        # Validate field name
-        if not validate_field_name(field_data.field_name):
-            raise HTTPException(status_code=400, detail="Invalid field name format")
-        
-        # Save to database
-        conn = sqlite3.connect('inventorysync_dev.db')
-        cursor = conn.cursor()
-        
-        try:
-            cursor.execute("""
-                INSERT INTO custom_field_definitions (
-                    store_id, field_name, field_type, display_name, description,
-                    required, default_value, validation_rules, category
-                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
-            """, (
-                store_id,
-                field_data.field_name,
-                field_data.field_type,
-                field_data.display_name,
-                field_data.description,
-                field_data.required,
-                field_data.default_value,
-                json.dumps(field_data.validation_rules),
-                field_data.category
-            ))
-            
-            field_id = cursor.lastrowid
-            conn.commit()
-            
-            print(f"✅ Custom field created: {field_data.field_name} (ID: {field_id})")
-            
-            return JSONResponse(content={
+        db.add(new_field)
+        db.commit()
+        db.refresh(new_field)
+
+        print(f"✅ Custom field created: {field_data.field_name} (ID: {new_field.id})")
+
+        return JSONResponse(
+            status_code=201,
+            content={
                 "status": "success",
                 "message": "Custom field created",
-                "field_id": field_id,
-                "field_name": field_data.field_name
-            })
-            
-        except sqlite3.IntegrityError as e:
-            conn.rollback()
-            raise HTTPException(status_code=409, detail="Field name already exists")
-        except Exception as e:
-            conn.rollback()
-            raise HTTPException(status_code=500, detail="Database error")
-        finally:
-            conn.close()
-    
-    except HTTPException:
-        raise
+                "field_id": new_field.id,
+                "field_name": new_field.field_name,
+                "field_type": new_field.field_type,
+                "display_name": new_field.display_name,
+                "is_active": new_field.is_active
+            }
+        )
     except Exception as e:
+        db.rollback()
         print(f"❌ Error creating custom field: {e}")
         raise HTTPException(status_code=500, detail="Internal server error")
 

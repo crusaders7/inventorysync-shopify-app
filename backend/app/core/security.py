@@ -7,7 +7,7 @@ import jwt
 from passlib.context import CryptContext
 from fastapi import HTTPException, status, Request
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
-from app.core.config import settings
+from config import settings
 
 # Password hashing
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")

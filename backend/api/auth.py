@@ -48,7 +48,7 @@ async def dev_setup(shop: str = "inventorysync-dev.myshopify.com"):
             shopify_store_id="12345",  # Mock store ID
             shop_domain=shop,
             store_name="InventorySync Dev Store",
-            access_token="dev_token_123"  # Mock token for development
+            access_token=os.getenv("DEV_ACCESS_TOKEN", "dev_token_123")  # Mock token for development
         )
         
         session.add(new_store)
@@ -103,9 +103,12 @@ async def install_app(
         # Required Shopify scopes for inventory management
         scopes = [
             "read_products",
-            "write_products", 
+            "write_products",
             "read_inventory",
-            "write_inventory"
+            "write_inventory",
+            "read_orders",
+            "write_orders",
+            "read_customers"
         ]
         
         redirect_uri = f"{settings.app_url if hasattr(settings, 'app_url') else 'http://localhost:8000'}/api/v1/auth/callback"

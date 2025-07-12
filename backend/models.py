@@ -49,6 +49,10 @@ class Store(Base, TimestampMixin):
     # GDPR compliance
     deletion_scheduled_at = Column(DateTime(timezone=True), nullable=True)
     
+    # App status
+    is_active = Column(Boolean, default=True)
+    uninstalled_at = Column(DateTime(timezone=True), nullable=True)
+    
     # Access tokens (encrypted in production)
     access_token = Column(Text, nullable=False)
     
@@ -94,6 +98,8 @@ class Product(Base, TimestampMixin):
     handle = Column(String, nullable=False)
     product_type = Column(String, nullable=True)
     vendor = Column(String, nullable=True)
+    tags = Column(Text, nullable=True)  # Comma-separated tags
+    body_html = Column(Text, nullable=True)  # Product description HTML
     
     # Pricing
     price = Column(Float, nullable=True)
@@ -122,9 +128,13 @@ class ProductVariant(Base, TimestampMixin):
     title = Column(String, nullable=False)
     sku = Column(String, nullable=True, index=True)
     barcode = Column(String, nullable=True)
+    option1 = Column(String, nullable=True)  # e.g., Size
+    option2 = Column(String, nullable=True)  # e.g., Color
+    option3 = Column(String, nullable=True)  # e.g., Style
     
     # Pricing
     price = Column(Float, nullable=False)
+    compare_at_price = Column(Float, nullable=True)
     cost_per_item = Column(Float, nullable=True)
     
     # Physical properties
@@ -135,6 +145,8 @@ class ProductVariant(Base, TimestampMixin):
     requires_shipping = Column(Boolean, default=True)
     track_inventory = Column(Boolean, default=True)
     inventory_policy = Column(String, default="deny")  # deny, continue
+    inventory_quantity = Column(Integer, default=0)
+    inventory_management = Column(String, nullable=True)  # shopify, manual, etc.
     
     # Custom fields data
     custom_data = Column(JSON, default={})

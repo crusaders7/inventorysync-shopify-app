@@ -137,18 +137,47 @@ class Settings(BaseSettings):
     postgres_password: Optional[str] = Field(default=None)
     redis_password: Optional[str] = Field(default=None)
     log_level: str = Field(default="INFO")
-    cors_origins: str = Field(default="http://localhost:3000")
+    cors_origins: str = Field(default="http://localhost:3000,https://inventorysync.com,https://*.inventorysync.com")
     backup_webhook_url: Optional[str] = Field(default=None)
     enable_api_docs: bool = Field(default=True)
     enable_swagger_ui: bool = Field(default=True)
     
     # Security Settings
-    ssl_redirect: bool = Field(default=False, description="Redirect HTTP to HTTPS")
-    secure_cookies: bool = Field(default=False, description="Use secure cookies")
-    session_cookie_secure: bool = Field(default=False)
+    ssl_redirect: bool = Field(default=True, description="Redirect HTTP to HTTPS")
+    secure_cookies: bool = Field(default=True, description="Use secure cookies")
+    session_cookie_secure: bool = Field(default=True)
     session_cookie_httponly: bool = Field(default=True)
     session_cookie_samesite: str = Field(default="lax")
     encryption_key: Optional[str] = Field(default=None, description="Data encryption key")
+    
+    # Request Validation Settings
+    enable_request_validation: bool = Field(default=True)
+    enable_sql_injection_protection: bool = Field(default=True)
+    enable_xss_protection: bool = Field(default=True)
+    max_request_size: int = Field(default=10485760, description="Max request size in bytes (10MB)")
+    request_timeout: int = Field(default=30, description="Request timeout in seconds")
+    
+    # OAuth Security Settings
+    oauth_state_expiry: int = Field(default=300, description="OAuth state expiry in seconds")
+    oauth_enforce_https: bool = Field(default=True)
+    verify_shopify_hmac: bool = Field(default=True)
+    
+    # CSP Settings
+    enable_csp: bool = Field(default=True)
+    csp_report_uri: Optional[str] = Field(default=None)
+    
+    # HSTS Settings
+    enable_hsts: bool = Field(default=True)
+    hsts_max_age: int = Field(default=31536000)
+    hsts_include_subdomains: bool = Field(default=True)
+    hsts_preload: bool = Field(default=True)
+    
+    # Rate Limiting Settings
+    rate_limit_storage: str = Field(default="memory", description="Rate limit storage: memory or redis")
+    rate_limit_burst: int = Field(default=20, description="Burst rate limit")
+    
+    # API Versioning
+    api_version_header: bool = Field(default=True, description="Add API version headers to responses")
     
     class Config:
         env_file = ".env"

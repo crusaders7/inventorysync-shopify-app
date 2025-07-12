@@ -129,4 +129,10 @@ site/
 # Backup Files
 *.backup
 *.bak
-*.orig
+*.orig*.backup
+node_modules/
+venv/
+__pycache__/
+*.pyc
+.env
+.env.production
