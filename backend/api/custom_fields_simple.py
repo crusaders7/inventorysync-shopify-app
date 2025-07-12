@@ -19,6 +19,66 @@ async def list_all_custom_fields():
         "total": len(custom_fields_store)
     }
 
+@router.get("/value-proposition")
+async def get_value_proposition():
+    """Explain the value of custom fields feature"""
+    return {
+        "feature": "Unlimited Custom Fields",
+        "our_price": "$29-99/month",
+        "shopify_plus_price": "$2,000+/month",
+        "monthly_savings": "$1,901-1,971",
+        "annual_savings": "$22,812-23,652",
+        "benefits": [
+            "Add unlimited custom fields to products",
+            "Create fields for any data type (text, number, date, etc.)",
+            "Use pre-built industry templates",
+            "No coding required",
+            "Works with Basic Shopify plan",
+            "Save 95% compared to Shopify Plus"
+        ],
+        "use_cases": [
+            "Add size charts to apparel",
+            "Track expiry dates for food products",
+            "Store warranty info for electronics",
+            "Add care instructions",
+            "Track supplier information",
+            "Store compliance data",
+            "Add SEO metadata"
+        ]
+    }
+
+@router.get("/templates")
+async def get_field_templates():
+    """Get pre-built field templates for different industries"""
+    return {
+        "templates": {
+            "apparel": [
+                {"field_name": "size", "display_name": "Size", "field_type": "select", "options": ["XS", "S", "M", "L", "XL"]},
+                {"field_name": "color", "display_name": "Color", "field_type": "text"},
+                {"field_name": "material", "display_name": "Material", "field_type": "text"},
+                {"field_name": "care_instructions", "display_name": "Care Instructions", "field_type": "textarea"}
+            ],
+            "electronics": [
+                {"field_name": "warranty_period", "display_name": "Warranty (months)", "field_type": "number"},
+                {"field_name": "voltage", "display_name": "Voltage", "field_type": "text"},
+                {"field_name": "compatibility", "display_name": "Compatible With", "field_type": "text"}
+            ],
+            "food_beverage": [
+                {"field_name": "expiry_date", "display_name": "Expiry Date", "field_type": "date"},
+                {"field_name": "ingredients", "display_name": "Ingredients", "field_type": "textarea"},
+                {"field_name": "allergens", "display_name": "Allergens", "field_type": "multi_select"},
+                {"field_name": "storage_temp", "display_name": "Storage Temperature", "field_type": "text"}
+            ],
+            "jewelry": [
+                {"field_name": "metal_type", "display_name": "Metal Type", "field_type": "select"},
+                {"field_name": "stone_type", "display_name": "Stone Type", "field_type": "text"},
+                {"field_name": "carat_weight", "display_name": "Carat Weight", "field_type": "number"},
+                {"field_name": "ring_size", "display_name": "Ring Size", "field_type": "select"}
+            ]
+        },
+        "message": "Apply any template to start using custom fields immediately!"
+    }
+
 @router.get("/{shop_domain}")
 async def get_shop_custom_fields(shop_domain: str):
     """Get all custom fields for a specific shop"""
@@ -129,30 +189,3 @@ async def delete_custom_field(shop_domain: str, field_id: str):
     else:
         raise HTTPException(status_code=404, detail="Field not found")
 
-@router.get("/value-proposition")
-async def get_value_proposition():
-    """Explain the value of custom fields feature"""
-    return {
-        "feature": "Unlimited Custom Fields",
-        "our_price": "$29-99/month",
-        "shopify_plus_price": "$2,000+/month",
-        "monthly_savings": "$1,901-1,971",
-        "annual_savings": "$22,812-23,652",
-        "benefits": [
-            "Add unlimited custom fields to products",
-            "Create fields for any data type (text, number, date, etc.)",
-            "Use pre-built industry templates",
-            "No coding required",
-            "Works with Basic Shopify plan",
-            "Save 95% compared to Shopify Plus"
-        ],
-        "use_cases": [
-            "Add size charts to apparel",
-            "Track expiry dates for food products",
-            "Store warranty info for electronics",
-            "Add care instructions",
-            "Track supplier information",
-            "Store compliance data",
-            "Add SEO metadata"
-        ]
-    }
