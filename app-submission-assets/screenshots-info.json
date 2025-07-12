@@ -1,0 +1,37 @@
+[
+  {
+    "filename": "01-dashboard.png",
+    "title": "Custom Fields Dashboard",
+    "description": "Manage all your custom fields from one intuitive dashboard"
+  },
+  {
+    "filename": "02-field-builder.png",
+    "title": "Drag & Drop Field Builder",
+    "description": "Create custom fields with our visual builder - no coding required"
+  },
+  {
+    "filename": "03-product-edit.png",
+    "title": "Enhanced Product Editor",
+    "description": "Custom fields seamlessly integrated into your product pages"
+  },
+  {
+    "filename": "04-bulk-operations.png",
+    "title": "Bulk Edit Custom Fields",
+    "description": "Update hundreds of products at once with bulk operations"
+  },
+  {
+    "filename": "05-templates.png",
+    "title": "Industry Templates",
+    "description": "Get started instantly with pre-built industry templates"
+  },
+  {
+    "filename": "06-search-filter.png",
+    "title": "Advanced Search & Filter",
+    "description": "Find products by any custom field value"
+  },
+  {
+    "filename": "07-analytics.png",
+    "title": "Field Analytics",
+    "description": "Track field usage and data quality with built-in analytics"
+  }
+]

@@ -1,0 +1,60 @@
+{
+  "name": "InventorySync - Custom Fields Pro",
+  "tagline": "Save $1,971/month vs Shopify Plus - Add unlimited custom fields to your products",
+  "shortDescription": "Add custom fields to products without upgrading to Shopify Plus. Track materials, dimensions, compliance data, and any attributes specific to your business.",
+  "keyBenefits": [
+    "💰 Save $1,971/month compared to Shopify Plus ($29 vs $2,000)",
+    "✨ Unlimited custom fields for products and variants",
+    "🏭 Industry-specific templates (Fashion, Electronics, Food & Beverage)",
+    "📊 Bulk operations and import/export capabilities",
+    "🔍 Advanced search and filtering by custom field values",
+    "📈 Real-time sync with Shopify",
+    "🚀 Lightning-fast performance with 10,000+ products"
+  ],
+  "extendedDescription": "\n# Why InventorySync?\n\nShopify Basic merchants often need custom fields but can't justify the $2,000/month Shopify Plus upgrade. InventorySync bridges this gap, offering enterprise-level custom field functionality at a fraction of the cost.\n\n## Perfect For:\n- Fashion brands tracking materials, care instructions, and sizing\n- Electronics retailers managing specifications and compliance data\n- Food & beverage stores tracking ingredients and nutritional info\n- Any business with complex product information needs\n\n## Core Features:\n\n### 🎯 Custom Field Types\n- Text fields (short and long)\n- Numbers and decimals\n- Dates and date ranges\n- Dropdowns and multi-select\n- Yes/No toggles\n- File attachments\n- Rich text with formatting\n\n### 🏭 Industry Templates\nGet started instantly with pre-built templates:\n- **Fashion & Apparel**: Materials, care instructions, fit details\n- **Electronics**: Specifications, certifications, warranty info\n- **Food & Beverage**: Ingredients, allergens, nutritional data\n- **Beauty & Cosmetics**: Ingredients, usage instructions, certifications\n- **Home & Garden**: Dimensions, assembly, care instructions\n\n### 💪 Powerful Management\n- Drag-and-drop field builder\n- Field validation and required settings\n- Conditional logic for dynamic fields\n- Bulk edit multiple products at once\n- Import/Export via CSV\n- API access for integrations\n\n### 📊 Advanced Features\n- Search products by any custom field\n- Filter and sort by custom values\n- Analytics on field usage\n- Data quality reporting\n- Automated workflows based on field values\n\n## Pricing That Makes Sense\n\n**Starter - $29/month**\n- Up to 1,000 products\n- 10 custom fields\n- 3 industry templates\n- Email support\n- 14-day free trial\n\n**Growth - $79/month**\n- Up to 10,000 products\n- Unlimited custom fields\n- All industry templates\n- Bulk operations\n- Priority support\n- API access\n\n**Pro - $149/month**\n- Unlimited products\n- White-label options\n- Custom templates\n- Dedicated support\n- Advanced analytics\n- Custom integrations\n\n## What Our Customers Say\n\n\"We saved almost $24,000 per year by using InventorySync instead of upgrading to Shopify Plus. The custom fields work perfectly for our fashion brand.\" - Sarah M., Fashion Retailer\n\n\"Finally, a solution that lets us track all our product specifications without breaking the bank. Setup was instant with the electronics template.\" - Mike T., Electronics Store\n\n\"The bulk import feature saved us weeks of work. We imported 5,000 products with custom fields in minutes.\" - Jennifer L., Home Goods\n\n## Get Started in Minutes\n\n1. Install from Shopify App Store\n2. Choose your industry template (or start from scratch)\n3. Add custom fields to your products\n4. Start saving $1,971/month!\n\n## Support & Resources\n\n- 📧 24/7 Email Support\n- 📚 Comprehensive Documentation\n- 🎥 Video Tutorials\n- 💬 Live Chat (Growth & Pro plans)\n- 🚀 Onboarding Assistance\n\nDon't let custom field limitations hold your business back. Join thousands of merchants who've discovered the smart way to manage product information.\n\n**Install InventorySync today and transform how you manage product data!**\n",
+  "pricingPlans": {
+    "starter": {
+      "name": "Starter",
+      "price": "$29/month",
+      "features": [
+        "Up to 1,000 products",
+        "10 custom fields",
+        "3 industry templates",
+        "Basic search & filter",
+        "CSV import/export",
+        "Email support",
+        "14-day free trial"
+      ]
+    },
+    "growth": {
+      "name": "Growth",
+      "price": "$79/month",
+      "features": [
+        "Up to 10,000 products",
+        "Unlimited custom fields",
+        "All industry templates",
+        "Advanced search & filter",
+        "Bulk operations",
+        "API access",
+        "Priority support",
+        "Custom field analytics",
+        "14-day free trial"
+      ]
+    },
+    "pro": {
+      "name": "Pro",
+      "price": "$149/month",
+      "features": [
+        "Unlimited products",
+        "Everything in Growth",
+        "White-label options",
+        "Custom templates",
+        "Advanced workflows",
+        "Dedicated support",
+        "Custom integrations",
+        "SLA guarantee",
+        "14-day free trial"
+      ]
+    }
+  }
+}
