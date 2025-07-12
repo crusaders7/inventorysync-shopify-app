@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>API Test Form</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 40px; }
+        .form-group { margin: 20px 0; }
+        label { display: block; margin-bottom: 5px; font-weight: bold; }
+        input, select { padding: 8px; margin-bottom: 10px; width: 200px; }
+        button { padding: 10px 20px; background: #007cba; color: white; border: none; cursor: pointer; }
+        button:hover { background: #005a87; }
+        .result { margin-top: 20px; padding: 10px; background: #f0f0f0; border-left: 4px solid #007cba; }
+        .error { border-left-color: #d72c0d; background: #fef7f6; }
+        .success { border-left-color: #008060; background: #f6fff8; }
+    </style>
+</head>
+<body>
+    <h1>InventorySync API Test Form</h1>
+    
+    <h2>Test 1: Get Inventory Items</h2>
+    <button onclick="testGetInventory()">Get All Inventory</button>
+    <div id="inventory-result" class="result" style="display:none;"></div>
+    
+    <h2>Test 2: Create New Product</h2>
+    <form onsubmit="testCreateProduct(event)">
+        <div class="form-group">
+            <label>Product Name:</label>
+            <input type="text" id="product_name" value="Test Widget" required>
+        </div>
+        <div class="form-group">
+            <label>SKU:</label>
+            <input type="text" id="sku" value="WIDGET-001" required>
+        </div>
+        <div class="form-group">
+            <label>Current Stock:</label>
+            <input type="number" id="current_stock" value="50" required>
+        </div>
+        <div class="form-group">
+            <label>Reorder Point:</label>
+            <input type="number" id="reorder_point" value="10" required>
+        </div>
+        <div class="form-group">
+            <label>Location:</label>
+            <select id="location">
+                <option value="Warehouse A">Warehouse A</option>
+                <option value="Warehouse B">Warehouse B</option>
+                <option value="Retail Store">Retail Store</option>
+            </select>
+        </div>
+        <button type="submit">Create Product</button>
+    </form>
+    <div id="create-result" class="result" style="display:none;"></div>
+    
+    <h2>Test 3: Update Stock Level</h2>
+    <form onsubmit="testUpdateStock(event)">
+        <div class="form-group">
+            <label>Product ID:</label>
+            <input type="text" id="update_id" value="1" required>
+        </div>
+        <div class="form-group">
+            <label>New Stock Quantity:</label>
+            <input type="number" id="new_quantity" value="75" required>
+        </div>
+        <button type="submit">Update Stock</button>
+    </form>
+    <div id="update-result" class="result" style="display:none;"></div>
+    
+    <h2>Test 4: Resolve Alert</h2>
+    <form onsubmit="testResolveAlert(event)">
+        <div class="form-group">
+            <label>Alert ID:</label>
+            <input type="text" id="alert_id" value="1" required>
+        </div>
+        <button type="submit">Resolve Alert</button>
+    </form>
+    <div id="resolve-result" class="result" style="display:none;"></div>
+    
+    <h2>Test 5: Dashboard Sync</h2>
+    <form onsubmit="testSync(event)">
+        <div class="form-group">
+            <label>Shop Domain:</label>
+            <input type="text" id="shop_domain" value="test-shop.myshopify.com" required>
+        </div>
+        <button type="submit">Trigger Sync</button>
+    </form>
+    <div id="sync-result" class="result" style="display:none;"></div>
+
+    <script>
+        const API_BASE = 'http://localhost:8000';
+        
+        function showResult(elementId, data, isError = false) {
+            const element = document.getElementById(elementId);
+            element.style.display = 'block';
+            element.className = `result ${isError ? 'error' : 'success'}`;
+            element.innerHTML = `<pre>${JSON.stringify(data, null, 2)}</pre>`;
+        }
+        
+        async function testGetInventory() {
+            try {
+                const response = await fetch(`${API_BASE}/api/v1/inventory/`);
+                const data = await response.json();
+                showResult('inventory-result', data);
+            } catch (error) {
+                showResult('inventory-result', { error: error.message }, true);
+            }
+        }
+        
+        async function testCreateProduct(event) {
+            event.preventDefault();
+            try {
+                const payload = {
+                    product_name: document.getElementById('product_name').value,
+                    sku: document.getElementById('sku').value,
+                    current_stock: parseInt(document.getElementById('current_stock').value),
+                    reorder_point: parseInt(document.getElementById('reorder_point').value),
+                    location: document.getElementById('location').value
+                };
+                
+                const response = await fetch(`${API_BASE}/api/v1/inventory/`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(payload)
+                });
+                
+                const data = await response.json();
+                showResult('create-result', data, !response.ok);
+            } catch (error) {
+                showResult('create-result', { error: error.message }, true);
+            }
+        }
+        
+        async function testUpdateStock(event) {
+            event.preventDefault();
+            try {
+                const id = document.getElementById('update_id').value;
+                const quantity = parseInt(document.getElementById('new_quantity').value);
+                
+                const response = await fetch(`${API_BASE}/api/v1/inventory/${id}/stock`, {
+                    method: 'PUT',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ quantity })
+                });
+                
+                const data = await response.json();
+                showResult('update-result', data, !response.ok);
+            } catch (error) {
+                showResult('update-result', { error: error.message }, true);
+            }
+        }
+        
+        async function testResolveAlert(event) {
+            event.preventDefault();
+            try {
+                const id = document.getElementById('alert_id').value;
+                
+                const response = await fetch(`${API_BASE}/api/v1/alerts/${id}/resolve`, {
+                    method: 'PUT'
+                });
+                
+                const data = await response.json();
+                showResult('resolve-result', data, !response.ok);
+            } catch (error) {
+                showResult('resolve-result', { error: error.message }, true);
+            }
+        }
+        
+        async function testSync(event) {
+            event.preventDefault();
+            try {
+                const shop = document.getElementById('shop_domain').value;
+                
+                const response = await fetch(`${API_BASE}/api/v1/dashboard/sync?shop=${encodeURIComponent(shop)}`, {
+                    method: 'POST'
+                });
+                
+                const data = await response.json();
+                showResult('sync-result', data, !response.ok);
+            } catch (error) {
+                showResult('sync-result', { error: error.message }, true);
+            }
+        }
+    </script>
+</body>
+</html>

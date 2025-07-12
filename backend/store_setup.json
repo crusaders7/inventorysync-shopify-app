@@ -1,0 +1,10 @@
+{
+  "store_id": 1,
+  "domain": "inventorysync-dev.myshopify.com",
+  "name": "InventorySync Dev Store",
+  "email": "test@inventorysync.com",
+  "oauth_url": "https://inventorysync-dev.myshopify.com/admin/oauth/authorize?client_id=b9e83419bf510cff0b85cf446b4a7750&scope=read_products,write_products,read_inventory,write_inventory,read_locations,read_orders&redirect_uri=http%3A//localhost%3A8000/api/v1/auth/callback&state=setup_20250709_210517",
+  "setup_date": "2025-07-09T21:05:17.489478",
+  "partner_dashboard": "https://partners.shopify.com/4377870/apps/265561079809/overview",
+  "dev_store_admin": "https://admin.shopify.com/store/inventorysync-dev"
+}

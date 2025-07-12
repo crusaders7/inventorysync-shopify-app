@@ -10,7 +10,7 @@ from sqlalchemy.ext.asyncio import create_async_engine, AsyncSession, async_sess
 from typing import AsyncGenerator
 import logging
 
-from .config import get_database_url, is_development
+from config import get_database_url, is_development
 
 logger = logging.getLogger(__name__)
 
@@ -78,7 +78,7 @@ async def init_db():
     """Initialize database tables"""
     async with async_engine.begin() as conn:
         # Import all models here to ensure they're registered
-        from . import models  # noqa: F401
+        import models  # noqa: F401
         
         # Create all tables
         await conn.run_sync(Base.metadata.create_all)
@@ -125,8 +125,9 @@ class DatabaseManager:
 async def check_database_health() -> bool:
     """Check if database is accessible"""
     try:
+        from sqlalchemy import text
         async with AsyncSessionLocal() as session:
-            await session.execute("SELECT 1")
+            await session.execute(text("SELECT 1"))
             return True
     except Exception as e:
         logger.error(f"Database health check failed: {e}")

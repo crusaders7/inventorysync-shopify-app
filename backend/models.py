@@ -10,7 +10,8 @@ from datetime import datetime
 from typing import Optional
 import uuid
 
-from .database import Base
+# Import Base from database module
+from database import Base
 
 
 class TimestampMixin:
@@ -24,9 +25,9 @@ class Store(Base, TimestampMixin):
     __tablename__ = "stores"
     
     id = Column(Integer, primary_key=True, index=True)
-    shopify_store_id = Column(String, unique=True, index=True, nullable=False)
-    shop_domain = Column(String, nullable=False)
-    store_name = Column(String, nullable=False)
+    shopify_domain = Column(String, unique=True, index=True, nullable=False)
+    shop_name = Column(String, nullable=False)
+    email = Column(String, nullable=True)
     
     # Store settings
     currency = Column(String, default="USD")
@@ -34,8 +35,19 @@ class Store(Base, TimestampMixin):
     
     # Subscription info
     subscription_plan = Column(String, default="starter")  # starter, growth, pro
-    subscription_status = Column(String, default="active")  # active, cancelled, expired
+    subscription_status = Column(String, default="trial")  # trial, active, cancelled, expired, frozen
     trial_ends_at = Column(DateTime(timezone=True), nullable=True)
+    
+    # Shopify Billing API integration
+    shopify_charge_id = Column(String, nullable=True)  # Recurring charge ID
+    billing_cycle_start = Column(DateTime(timezone=True), nullable=True)
+    billing_cycle_end = Column(DateTime(timezone=True), nullable=True)
+    plan_price = Column(Float, default=0.0)
+    usage_charges = Column(Float, default=0.0)
+    billing_currency = Column(String, default="USD")
+    
+    # GDPR compliance
+    deletion_scheduled_at = Column(DateTime(timezone=True), nullable=True)
     
     # Access tokens (encrypted in production)
     access_token = Column(Text, nullable=False)
@@ -90,6 +102,9 @@ class Product(Base, TimestampMixin):
     # Status
     status = Column(String, default="active")  # active, archived, draft
     
+    # Custom fields data (JSONB for flexibility + SQL queries)
+    custom_data = Column(JSON, default={})  # Store custom field values
+    
     # Relationships
     store = relationship("Store", back_populates="products")
     variants = relationship("ProductVariant", back_populates="product", cascade="all, delete-orphan")
@@ -121,6 +136,9 @@ class ProductVariant(Base, TimestampMixin):
     track_inventory = Column(Boolean, default=True)
     inventory_policy = Column(String, default="deny")  # deny, continue
     
+    # Custom fields data
+    custom_data = Column(JSON, default={})
+    
     # Relationships
     product = relationship("Product", back_populates="variants")
     inventory_items = relationship("InventoryItem", back_populates="variant")
@@ -147,6 +165,9 @@ class InventoryItem(Base, TimestampMixin):
     
     # Lead times
     lead_time_days = Column(Integer, default=7)
+    
+    # Custom fields data
+    custom_data = Column(JSON, default={})
     
     # Relationships
     store = relationship("Store", back_populates="inventory_items")
@@ -186,7 +207,7 @@ class Alert(Base, TimestampMixin):
     store_id = Column(Integer, ForeignKey("stores.id"), nullable=False)
     
     # Alert details
-    alert_type = Column(String, nullable=False)  # low_stock, overstock, reorder, etc.
+    alert_type = Column(String, nullable=False)  # low_stock, overstock, reorder, compliance, workflow, custom
     severity = Column(String, default="medium")  # low, medium, high, critical
     title = Column(String, nullable=False)
     message = Column(Text, nullable=False)
@@ -197,14 +218,64 @@ class Alert(Base, TimestampMixin):
     current_stock = Column(Integer, nullable=True)
     recommended_action = Column(Text, nullable=True)
     
+    # Enhanced alert features
+    alert_source = Column(String, default="system")  # system, workflow, manual, api
+    entity_type = Column(String, nullable=True)  # product, variant, inventory_item, supplier
+    entity_id = Column(Integer, nullable=True)
+    custom_data = Column(JSON, default={})  # Store custom alert data
+    notification_channels = Column(JSON, default=[])  # ["email", "webhook", "sms"]
+    
     # Status
     is_acknowledged = Column(Boolean, default=False)
     acknowledged_at = Column(DateTime(timezone=True), nullable=True)
+    acknowledged_by = Column(String, nullable=True)
     is_resolved = Column(Boolean, default=False)
     resolved_at = Column(DateTime(timezone=True), nullable=True)
+    resolved_by = Column(String, nullable=True)
+    resolution_notes = Column(Text, nullable=True)
+    
+    # Auto-resolution
+    auto_resolve_at = Column(DateTime(timezone=True), nullable=True)
+    is_auto_resolvable = Column(Boolean, default=False)
     
     # Relationships
     store = relationship("Store", back_populates="alerts")
+
+
+class AlertTemplate(Base, TimestampMixin):
+    """User-defined alert templates for custom alerts"""
+    __tablename__ = "alert_templates"
+    
+    id = Column(Integer, primary_key=True, index=True)
+    store_id = Column(Integer, ForeignKey("stores.id"), nullable=False)
+    
+    # Template definition
+    template_name = Column(String, nullable=False)
+    description = Column(Text, nullable=True)
+    alert_type = Column(String, nullable=False)
+    
+    # Template configuration
+    title_template = Column(String, nullable=False)  # "Low Stock: {product_name}"
+    message_template = Column(Text, nullable=False)  # "Stock for {sku} is {current_stock}"
+    severity = Column(String, default="medium")
+    
+    # Trigger conditions
+    trigger_conditions = Column(JSON, default={})  # Same format as workflow conditions
+    
+    # Notification settings
+    notification_channels = Column(JSON, default=[])  # ["email", "webhook"]
+    notification_config = Column(JSON, default={})  # Email addresses, webhook URLs, etc.
+    
+    # Template settings
+    is_active = Column(Boolean, default=True)
+    auto_resolve_hours = Column(Integer, nullable=True)  # Auto-resolve after X hours
+    
+    # Usage tracking
+    usage_count = Column(Integer, default=0)
+    last_used_at = Column(DateTime(timezone=True), nullable=True)
+    
+    # Relationships
+    store = relationship("Store")
 
 
 class Forecast(Base, TimestampMixin):
@@ -310,3 +381,92 @@ class PurchaseOrderLineItem(Base, TimestampMixin):
     
     # Relationships
     purchase_order = relationship("PurchaseOrder", back_populates="line_items")
+
+
+# =============================================================================
+# CUSTOM FIELDS SYSTEM - Our competitive advantage vs $2,500 enterprise tools
+# =============================================================================
+
+class CustomFieldDefinition(Base, TimestampMixin):
+    """Define custom field schemas for any entity"""
+    __tablename__ = "custom_field_definitions"
+    
+    id = Column(Integer, primary_key=True, index=True)
+    store_id = Column(Integer, ForeignKey("stores.id"), nullable=False)
+    
+    # Field definition
+    field_name = Column(String, nullable=False)  # e.g. "season", "material", "supplier_rating"
+    display_name = Column(String, nullable=False)  # e.g. "Season", "Material Type", "Supplier Rating"
+    field_type = Column(String, nullable=False)  # text, number, date, boolean, select, multi_select, url, email
+    target_entity = Column(String, nullable=False)  # "product", "variant", "inventory_item", "supplier"
+    
+    # Validation rules (stored as JSON)
+    validation_rules = Column(JSON, default={})  # {"min": 0, "max": 100, "options": ["S", "M", "L"], "regex": "pattern"}
+    
+    # Field settings
+    is_required = Column(Boolean, default=False)
+    is_searchable = Column(Boolean, default=True)
+    is_filterable = Column(Boolean, default=True)
+    display_order = Column(Integer, default=0)
+    help_text = Column(Text, nullable=True)
+    default_value = Column(String, nullable=True)
+    
+    # Grouping and organization
+    field_group = Column(String, nullable=True)  # "basic", "advanced", "cultural", "compliance"
+    industry_template = Column(String, nullable=True)  # "fashion", "food", "electronics", "B2B"
+    
+    # Status
+    is_active = Column(Boolean, default=True)
+    
+    # Relationships
+    store = relationship("Store")
+
+
+class WorkflowRule(Base, TimestampMixin):
+    """Custom business logic rules and automation"""
+    __tablename__ = "workflow_rules"
+    
+    id = Column(Integer, primary_key=True, index=True)
+    store_id = Column(Integer, ForeignKey("stores.id"), nullable=False)
+    
+    # Rule definition
+    rule_name = Column(String, nullable=False)
+    description = Column(Text, nullable=True)
+    
+    # Trigger configuration
+    trigger_event = Column(String, nullable=False)  # "inventory_low", "custom_field_change", "product_created", etc.
+    trigger_conditions = Column(JSON, default={})  # Complex conditions as JSON
+    
+    # Actions to perform
+    actions = Column(JSON, default=[])  # [{"type": "alert", "message": "Low stock!"}, {"type": "webhook", "url": "..."}]
+    
+    # Rule settings
+    is_active = Column(Boolean, default=True)
+    execution_count = Column(Integer, default=0)
+    last_executed_at = Column(DateTime(timezone=True), nullable=True)
+    
+    # Priority and limits
+    priority = Column(Integer, default=100)  # Lower number = higher priority
+    max_executions_per_hour = Column(Integer, default=60)
+    
+    # Relationships
+    store = relationship("Store")
+
+
+class WorkflowExecution(Base, TimestampMixin):
+    """Log of workflow rule executions"""
+    __tablename__ = "workflow_executions"
+    
+    id = Column(Integer, primary_key=True, index=True)
+    rule_id = Column(Integer, ForeignKey("workflow_rules.id"), nullable=False)
+    
+    # Execution details
+    trigger_data = Column(JSON, default={})  # Data that triggered the rule
+    execution_status = Column(String, default="success")  # success, failed, skipped
+    error_message = Column(Text, nullable=True)
+    
+    # Performance metrics
+    execution_time_ms = Column(Integer, nullable=True)
+    
+    # Relationships
+    rule = relationship("WorkflowRule")

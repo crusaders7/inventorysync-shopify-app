@@ -1,0 +1,11 @@
+=== PostgreSQL Backup Report ===
+Generated: 2025-07-11 20:39:49
+
+
+DAILY BACKUPS (1 files):
+  - inventorysync_backup_20250711_203944.sql.gz: 0.01 MB (Modified: 2025-07-11 20:39)
+  Total size: 0.01 MB
+
+WEEKLY BACKUPS (0 files):
+
+MONTHLY BACKUPS (0 files):

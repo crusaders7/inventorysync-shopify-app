@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <link rel="icon" type="image/svg+xml" href="/vite.svg" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <!-- Cache prevention meta tags -->
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
+    <meta http-equiv="Pragma" content="no-cache" />
+    <meta http-equiv="Expires" content="0" />
+    <title>InventorySync - Shopify Inventory Management</title>
+  </head>
+  <body>
+    <div id="root"></div>
+    <!-- Development Environment Setup -->
+    <script>
+      if (window.location.hostname === 'localhost') {
+        const script = document.createElement('script');
+        script.src = '/init-dev.js';
+        document.head.appendChild(script);
+      }
+    </script>
+    <script type="module" src="/src/main.jsx"></script>
+  </body>
+</html>

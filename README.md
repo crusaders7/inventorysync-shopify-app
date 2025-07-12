@@ -1,211 +1,298 @@
-# 📦 InventorySync - Shopify Inventory Management App
+# InventorySync - Advanced Shopify Inventory Management
 
-> **"From Spreadsheet Hell to Inventory Heaven"**
+A sophisticated inventory management system for Shopify stores with multi-location support, custom fields, and advanced analytics.
 
-A powerful yet affordable Shopify app that bridges the gap between manual spreadsheets and expensive enterprise solutions, helping small businesses automate their inventory management.
+## 🚀 Current Status
 
-## 🎯 Project Vision
+**Development Environment**: ✅ Running Successfully
+- Backend: http://localhost:8000
+- Frontend: http://localhost:3000
+- Database: PostgreSQL (configured and running)
 
-**Problem Solved:** 45% of small businesses still manage inventory with spreadsheets, while enterprise solutions cost $25,000+
+See [PROJECT_STATUS.md](PROJECT_STATUS.md) for detailed status and next steps.
 
-**Our Solution:** Smart inventory automation at $29-99/month with features that prevent stockouts, reduce waste, and increase profits.
+## Features
 
----
+- 📦 **Real-time Inventory Sync** - Automatic synchronization with Shopify
+- 🏪 **Multi-location Support** - Manage inventory across multiple locations
+- 📊 **Advanced Analytics** - Forecasting, trends, and insights
+- 🔔 **Smart Alerts** - Low stock warnings and custom notifications
+- 🏷️ **Custom Fields** - Industry-specific templates and flexible data fields
+- 🔄 **Bulk Operations** - Update multiple items efficiently
+- 📈 **Forecasting** - ML-powered demand prediction
+- 🛡️ **Enterprise Security** - JWT auth, rate limiting, audit logs
+- 🔧 **Workflow Automation** - Custom rules and automated actions
+- 💳 **Shopify Billing API** - Integrated subscription management
 
-## 🚀 Development Timeline
+## Tech Stack
 
-### **Phase 1: Foundation (Weeks 1-2)**
-- [x] Project setup and repository creation
-- [ ] Shopify app architecture design
-- [ ] Development environment configuration
-- [ ] Database schema design
-- [ ] Basic Shopify API integration
+### Backend
+- **FastAPI** - High-performance Python web framework
+- **PostgreSQL** - Primary database with JSONB for custom fields
+- **SQLAlchemy** - ORM with async support
+- **Redis** - Caching and session management
+- **Alembic** - Database migrations
+- **JWT** - Secure authentication
 
-### **Phase 2: Core Features (Weeks 3-4)**
-- [ ] Inventory tracking system
-- [ ] Smart reorder alerts
-- [ ] Basic dashboard interface
-- [ ] Shopify webhook integration
-- [ ] User authentication system
-
-### **Phase 3: Advanced Features (Weeks 5-6)**
-- [ ] Sales forecasting algorithm
-- [ ] Multi-location inventory sync
-- [ ] Supplier integration framework
-- [ ] Profit analytics dashboard
-- [ ] Mobile-responsive interface
-
-### **Phase 4: Launch Preparation (Weeks 7-8)**
-- [ ] Shopify App Store submission
-- [ ] Payment system integration (Stripe)
-- [ ] Documentation and help center
-- [ ] Beta testing with real stores
-- [ ] Marketing materials creation
-
----
-
-## 💰 Revenue Model
-
-| Plan | Price | Features | Target Users |
-|------|-------|----------|--------------|
-| **Starter** | $29/month | 1 store, basic alerts | New businesses |
-| **Growth** | $59/month | 3 stores, forecasting | Growing businesses |
-| **Pro** | $99/month | Unlimited stores, suppliers | Established businesses |
-
-**Projected Revenue:** $7,830/month with modest user acquisition
-
----
-
-## 🛠️ Technology Stack
-
-### **Backend**
-- **Python FastAPI** - High-performance API framework
-- **PostgreSQL** - Reliable database for inventory data
-- **Redis** - Caching and background job processing
-- **Shopify API** - Store integration and webhook handling
-
-### **Frontend**
-- **React.js** - Modern web interface
-- **Tailwind CSS** - Rapid UI development
-- **Chart.js** - Analytics and forecasting charts
+### Frontend  
+- **React 18** - Modern UI framework
 - **Shopify Polaris** - Native Shopify design system
+- **Vite** - Lightning-fast build tool
+- **React Router** - Client-side routing
+- **Axios** - HTTP client with interceptors
 
-### **Infrastructure**
-- **Railway** - Application hosting
-- **Shopify App Store** - Distribution and discovery
-- **Stripe** - Payment processing
-- **GitHub Actions** - CI/CD pipeline
+## Getting Started
 
----
+### Prerequisites
 
-## 📊 Key Features
+- Python 3.10+
+- Node.js 18+
+- PostgreSQL 13+
+- Redis 6+ (optional for development)
 
-### **Smart Reorder Alerts**
-- Automatic low-stock notifications
-- Customizable reorder points per product
-- Lead time calculations
-- Seasonal demand adjustments
+### Quick Start
 
-### **Multi-Location Sync**
-- Real-time inventory across all locations
-- Transfer recommendations
-- Location-specific analytics
-- Centralized inventory dashboard
-
-### **Sales Forecasting**
-- AI-powered demand prediction
-- Seasonal trend analysis
-- New product performance estimates
-- Inventory optimization suggestions
-
-### **Supplier Integration**
-- Automated purchase orders
-- Supplier performance tracking
-- Cost comparison tools
-- Delivery time monitoring
-
-### **Profit Analytics**
-- Product profitability insights
-- Cost tracking and optimization
-- Margin analysis by location
-- ROI calculations per product
-
----
-
-## 🎪 Competitive Advantage
-
-| Feature | InventorySync | Spreadsheets | Enterprise Solutions |
-|---------|---------------|--------------|---------------------|
-| **Cost** | $29-99/month | Free | $25,000+ setup |
-| **Setup Time** | 5 minutes | Hours daily | Weeks/months |
-| **Automation** | Full automation | Manual only | Full automation |
-| **Forecasting** | AI-powered | None | Advanced |
-| **Support** | Dedicated | None | Enterprise-level |
-
----
-
-## 📝 Development Progress Log
-
-### **Day 1 - Project Inception**
-```
-Date: 2025-07-07
-Status: ✅ COMPLETED
-
-Actions:
-- Created GitHub repository
-- Established project structure
-- Defined timeline and milestones
-- Documented technology stack decisions
-
-Next Steps:
-- Set up development environment
-- Create Shopify Partner account
-- Design database schema
-- Begin core API development
-
-Team Notes:
-- Brendan: Focus on Shopify app setup and partner account
-- Claude: Handle backend architecture and API design
+1. **Clone the repository**
+```bash
+git clone https://github.com/yourusername/inventorysync-shopify-app.git
+cd inventorysync-shopify-app
 ```
 
+2. **Backend Setup**
+```bash
+cd backend
+python -m venv venv
+source venv/bin/activate  # On Windows: venv\Scripts\activate
+pip install -r requirements.txt
+```
+
+3. **Database Setup**
+```bash
+# Create PostgreSQL database and user
+sudo -u postgres psql
+CREATE DATABASE inventorysync_dev;
+CREATE USER inventorysync WITH PASSWORD 'devpassword123';
+GRANT ALL PRIVILEGES ON DATABASE inventorysync_dev TO inventorysync;
+\q
+```
+
+4. **Frontend Setup**
+```bash
+cd ../frontend
+npm install
+```
+
+5. **Start Development Servers**
+
+Backend (Terminal 1):
+```bash
+cd backend
+uvicorn main:app --host 0.0.0.0 --port 8000 --reload
+```
+
+Frontend (Terminal 2):
+```bash
+cd frontend
+npm run dev
+```
+
+## Configuration
+
+### Backend Environment Variables
+
+The backend `.env` file is already configured for development. For production, update:
+
+```env
+# Shopify App Credentials
+SHOPIFY_API_KEY=your_production_api_key
+SHOPIFY_API_SECRET=your_production_api_secret
+SHOPIFY_WEBHOOK_SECRET=generate_webhook_secret
+
+# Database
+DATABASE_URL=postgresql://user:password@host:5432/dbname
+
+# Security
+SECRET_KEY=generate-strong-256-bit-key
+
+# Optional Services
+REDIS_URL=redis://localhost:6379/0
+SENTRY_DSN=your-sentry-dsn
+```
+
+### Frontend Configuration
+
+Frontend uses Vite proxy for development. For production, configure:
+
+```javascript
+// vite.config.js - already configured for development
+export default {
+  server: {
+    proxy: {
+      '/api': 'http://localhost:8000'
+    }
+  }
+}
+```
+
+## Project Structure
+
+```
+inventorysync-shopify-app/
+├── backend/
+│   ├── api/              # FastAPI route handlers
+│   │   ├── inventory.py  # Inventory management
+│   │   ├── custom_fields.py # Custom fields API
+│   │   ├── dashboard.py  # Analytics endpoints
+│   │   └── alerts.py     # Alert management
+│   ├── models.py         # SQLAlchemy models
+│   ├── database.py       # Database configuration
+│   ├── main.py           # FastAPI application
+│   ├── config.py         # Settings management
+│   └── requirements.txt  # Python dependencies
+├── frontend/
+│   ├── src/
+│   │   ├── components/   # Reusable React components
+│   │   │   ├── Dashboard.jsx
+│   │   │   ├── Inventory.jsx
+│   │   │   └── CustomFieldsManager.jsx
+│   │   ├── context/      # React Context providers
+│   │   ├── App.jsx       # Main application
+│   │   └── main.jsx      # Entry point
+│   ├── package.json      # Node dependencies
+│   └── vite.config.js    # Vite configuration
+└── docs/                 # Additional documentation
+```
+
+## API Documentation
+
+### Interactive Documentation
+- Swagger UI: http://localhost:8000/docs
+- ReDoc: http://localhost:8000/redoc
+
+### Key API Endpoints
+
+```
+# Inventory Management
+GET    /api/v1/inventory/products
+POST   /api/v1/inventory/sync
+PUT    /api/v1/inventory/bulk-update
+
+# Custom Fields
+GET    /api/v1/custom-fields/{shop_domain}
+POST   /api/v1/custom-fields/{shop_domain}
+GET    /api/v1/custom-fields/templates
+
+# Analytics
+GET    /api/v1/dashboard/stats/{shop_domain}
+GET    /api/v1/dashboard/charts/{shop_domain}
+
+# Alerts
+GET    /api/v1/alerts/{shop_domain}
+POST   /api/v1/alerts/rules/{shop_domain}
+```
+
+## Testing
+
+### Backend Tests
+```bash
+cd backend
+pytest tests/ -v
+```
+
+### Frontend Tests
+```bash
+cd frontend
+npm test
+```
+
+### E2E Tests
+```bash
+npm run test:e2e
+```
+
+## Deployment
+
+### Docker Deployment
+
+```bash
+# Build and run with Docker Compose
+docker-compose up -d
+
+# View logs
+docker-compose logs -f
+```
+
+### Production Checklist
+
+- [ ] Update all environment variables
+- [ ] Enable HTTPS (required by Shopify)
+- [ ] Configure domain and SSL certificates
+- [ ] Set up database backups
+- [ ] Configure monitoring (Sentry, etc.)
+- [ ] Enable rate limiting
+- [ ] Set up GDPR webhooks
+- [ ] Configure Shopify billing
+
+## Shopify App Submission
+
+### Requirements Checklist
+
+- [ ] OAuth 2.0 implementation
+- [ ] Webhook handlers for app/uninstalled
+- [ ] GDPR compliance webhooks
+- [ ] Billing API integration
+- [ ] App Bridge for embedded experience
+- [ ] Polaris design compliance
+- [ ] Performance requirements (<3s load time)
+- [ ] Security review passed
+
+### Testing on Development Store
+
+1. Create a development store at partners.shopify.com
+2. Install ngrok: `npm install -g ngrok`
+3. Expose local server: `ngrok http 8000`
+4. Update app URLs in Partner Dashboard
+5. Install app on development store
+
+## Troubleshooting
+
+### Common Issues
+
+**Frontend can't connect to backend:**
+- Check if backend is running on port 8000
+- Verify Vite proxy configuration
+- Clear browser cache
+
+**Database connection errors:**
+- Verify PostgreSQL is running
+- Check credentials in .env
+- Ensure database exists
+
+**Import errors in frontend:**
+- Clear Vite cache: `rm -rf node_modules/.vite`
+- Restart development server
+
+## Contributing
+
+1. Fork the repository
+2. Create feature branch (`git checkout -b feature/amazing-feature`)
+3. Follow code style (Black for Python, ESLint for JS)
+4. Write tests for new features
+5. Commit changes (`git commit -m 'Add amazing feature'`)
+6. Push to branch (`git push origin feature/amazing-feature`)
+7. Open Pull Request
+
+## License
+
+This project is licensed under the MIT License - see [LICENSE](LICENSE) file.
+
+## Support
+
+- 📧 Email: support@inventorysync.com
+- 💬 Discord: [Join our community](https://discord.gg/inventorysync)
+- 📖 Docs: [docs.inventorysync.com](https://docs.inventorysync.com)
+- 🐛 Issues: [GitHub Issues](https://github.com/yourusername/inventorysync-shopify-app/issues)
+
 ---
 
-## 🔗 Quick Links
-
-- **Repository:** [GitHub](https://github.com/[username]/inventorysync-shopify-app)
-- **Development Board:** [Project Kanban](https://github.com/[username]/inventorysync-shopify-app/projects)
-- **Documentation:** [Wiki](https://github.com/[username]/inventorysync-shopify-app/wiki)
-- **Shopify Partner:** [Dashboard](https://partners.shopify.com/)
-
----
-
-## 🤝 Team Collaboration
-
-### **Brendan's Responsibilities:**
-- Shopify Partner account setup
-- Frontend React development
-- Shopify API integration
-- User experience design
-- App Store submission process
-
-### **Claude's Responsibilities:**
-- Backend API architecture
-- Database design and optimization
-- Algorithm development (forecasting)
-- Documentation and testing
-- Deployment and DevOps
-
-### **Shared Responsibilities:**
-- Feature specification and planning
-- Code review and quality assurance
-- User testing and feedback integration
-- Marketing strategy and content
-- Customer support documentation
-
----
-
-## 📈 Success Metrics
-
-### **Technical Metrics:**
-- API response time < 200ms
-- 99.9% uptime reliability
-- Zero data loss incidents
-- Automated test coverage > 80%
-
-### **Business Metrics:**
-- 1,000+ app installs in first 6 months
-- $10,000+ monthly recurring revenue by month 12
-- 4.5+ star rating on Shopify App Store
-- 90%+ customer retention rate
-
-### **User Satisfaction:**
-- Average setup time < 10 minutes
-- 95%+ accuracy in reorder predictions
-- 30%+ reduction in stockouts for users
-- 50%+ time savings vs. manual management
-
----
-
-**Built with 💼 by Brendan Sumner and Claude AI**
-
-*Transforming small business inventory management, one Shopify store at a time.*
+**Note**: This is a development version. For production deployment, please follow the security checklist and update all credentials.

@@ -1,0 +1,21 @@
+[run]
+source = .
+omit = 
+    */venv/*
+    */tests/*
+    */migrations/*
+    */__pycache__/*
+    */site-packages/*
+    setup.py
+    */config/*
+
+[report]
+precision = 2
+show_missing = True
+skip_covered = False
+
+[html]
+directory = htmlcov
+
+[xml]
+output = coverage.xml
