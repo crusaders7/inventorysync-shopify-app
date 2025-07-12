@@ -6,28 +6,47 @@ import base64
 import hashlib
 from fastapi import Request, HTTPException
 from fastapi.responses import JSONResponse
+from starlette.middleware.base import BaseHTTPMiddleware
 import logging
 
 logger = logging.getLogger(__name__)
 
-class WebhookVerificationMiddleware:
+class WebhookVerificationMiddleware(BaseHTTPMiddleware):
     """Middleware to verify Shopify webhook signatures"""
     
     def __init__(self, app, webhook_secret: str):
-        self.app = app
+        super().__init__(app)
         self.webhook_secret = webhook_secret
     
-    async def __call__(self, scope, receive, send):
-        if scope["type"] == "http":
-            # Check if this is a webhook endpoint
-            path = scope.get("path", "")
-            if path.startswith("/api/webhooks/"):
-                # We need to intercept the request to verify it
-                # For now, let's pass through to avoid breaking the app
-                # TODO: Implement proper ASGI middleware for webhook verification
-                pass
+    async def dispatch(self, request: Request, call_next):
+        # Only verify webhook endpoints
+        if request.url.path.startswith("/api/webhooks/"):
+            # Get the raw body
+            body = await request.body()
+            
+            # Get the HMAC header
+            hmac_header = request.headers.get("X-Shopify-Hmac-Sha256")
+            
+            if not hmac_header:
+                logger.warning(f"Missing HMAC header for webhook: {request.url.path}")
+                return JSONResponse(
+                    status_code=401,
+                    content={"error": "Unauthorized"}
+                )
+            
+            # Verify the webhook
+            if not self.verify_webhook(body, hmac_header):
+                logger.warning(f"Invalid webhook signature for: {request.url.path}")
+                return JSONResponse(
+                    status_code=401,
+                    content={"error": "Invalid signature"}
+                )
+            
+            # Store body for later use in request state
+            request.state.webhook_body = body
         
-        await self.app(scope, receive, send)
+        response = await call_next(request)
+        return response
     
     def verify_webhook(self, body: bytes, signature: str) -> bool:
         """Verify the webhook signature"""
