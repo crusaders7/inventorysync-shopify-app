@@ -16,7 +16,7 @@ from utils.validation import (
 from utils.logging import logger
 from utils.exceptions import validation_error, not_found_error
 
-router = APIRouter(prefix="/api/v1/inventory", tags=["inventory"])
+router = APIRouter()
 
 # Mock data for now
 mock_inventory = [

@@ -1,0 +1,261 @@
+[
+  {
+    "endpoint": "GET /",
+    "status_code": 200,
+    "expected_status": 200,
+    "success": true,
+    "response": {
+      "message": "InventorySync Shopify App API",
+      "version": "1.0.0",
+      "status": "healthy"
+    },
+    "error": null
+  },
+  {
+    "endpoint": "GET /health",
+    "status_code": 200,
+    "expected_status": 200,
+    "success": true,
+    "response": {
+      "status": "healthy",
+      "service": "inventorysync-shopify-app",
+      "version": "1.0.0"
+    },
+    "error": null
+  },
+  {
+    "endpoint": "GET /api",
+    "status_code": 200,
+    "expected_status": 200,
+    "success": true,
+    "response": {
+      "message": "InventorySync API",
+      "version": "1.0.0",
+      "endpoints": {
+        "health": "/health",
+        "api": "/api"
+      }
+    },
+    "error": null
+  },
+  {
+    "endpoint": "GET /api/auth/install",
+    "status_code": 404,
+    "expected_status": 307,
+    "success": false,
+    "response": {
+      "detail": "Not Found"
+    },
+    "error": null
+  },
+  {
+    "endpoint": "GET /api/auth/callback",
+    "status_code": 404,
+    "expected_status": 422,
+    "success": false,
+    "response": {
+      "detail": "Not Found"
+    },
+    "error": null
+  },
+  {
+    "endpoint": "GET /api/inventory/items",
+    "status_code": 404,
+    "expected_status": 200,
+    "success": false,
+    "response": {
+      "detail": "Not Found"
+    },
+    "error": null
+  },
+  {
+    "endpoint": "GET /api/inventory/levels",
+    "status_code": 404,
+    "expected_status": 200,
+    "success": false,
+    "response": {
+      "detail": "Not Found"
+    },
+    "error": null
+  },
+  {
+    "endpoint": "POST /api/inventory/sync",
+    "status_code": 404,
+    "expected_status": 200,
+    "success": false,
+    "response": {
+      "detail": "Not Found"
+    },
+    "error": null
+  },
+  {
+    "endpoint": "GET /api/inventory/history",
+    "status_code": 404,
+    "expected_status": 200,
+    "success": false,
+    "response": {
+      "detail": "Not Found"
+    },
+    "error": null
+  },
+  {
+    "endpoint": "GET /api/locations",
+    "status_code": 404,
+    "expected_status": 200,
+    "success": false,
+    "response": {
+      "detail": "Not Found"
+    },
+    "error": null
+  },
+  {
+    "endpoint": "POST /api/locations",
+    "status_code": 404,
+    "expected_status": 200,
+    "success": false,
+    "response": {
+      "detail": "Not Found"
+    },
+    "error": null
+  },
+  {
+    "endpoint": "GET /api/alerts",
+    "status_code": 404,
+    "expected_status": 200,
+    "success": false,
+    "response": {
+      "detail": "Not Found"
+    },
+    "error": null
+  },
+  {
+    "endpoint": "POST /api/alerts",
+    "status_code": 404,
+    "expected_status": 200,
+    "success": false,
+    "response": {
+      "detail": "Not Found"
+    },
+    "error": null
+  },
+  {
+    "endpoint": "GET /api/webhooks",
+    "status_code": 404,
+    "expected_status": 200,
+    "success": false,
+    "response": {
+      "detail": "Not Found"
+    },
+    "error": null
+  },
+  {
+    "endpoint": "POST /api/webhooks/register",
+    "status_code": 404,
+    "expected_status": 200,
+    "success": false,
+    "response": {
+      "detail": "Not Found"
+    },
+    "error": null
+  },
+  {
+    "endpoint": "GET /api/reports/inventory-summary",
+    "status_code": 404,
+    "expected_status": 200,
+    "success": false,
+    "response": {
+      "detail": "Not Found"
+    },
+    "error": null
+  },
+  {
+    "endpoint": "GET /api/reports/movement-history",
+    "status_code": 404,
+    "expected_status": 200,
+    "success": false,
+    "response": {
+      "detail": "Not Found"
+    },
+    "error": null
+  },
+  {
+    "endpoint": "GET /api/reports/low-stock",
+    "status_code": 404,
+    "expected_status": 200,
+    "success": false,
+    "response": {
+      "detail": "Not Found"
+    },
+    "error": null
+  },
+  {
+    "endpoint": "GET /api/forecasting/demand",
+    "status_code": 404,
+    "expected_status": 200,
+    "success": false,
+    "response": {
+      "detail": "Not Found"
+    },
+    "error": null
+  },
+  {
+    "endpoint": "POST /api/forecasting/generate",
+    "status_code": 404,
+    "expected_status": 200,
+    "success": false,
+    "response": {
+      "detail": "Not Found"
+    },
+    "error": null
+  },
+  {
+    "endpoint": "GET /api/workflows",
+    "status_code": 404,
+    "expected_status": 200,
+    "success": false,
+    "response": {
+      "detail": "Not Found"
+    },
+    "error": null
+  },
+  {
+    "endpoint": "POST /api/workflows",
+    "status_code": 404,
+    "expected_status": 200,
+    "success": false,
+    "response": {
+      "detail": "Not Found"
+    },
+    "error": null
+  },
+  {
+    "endpoint": "POST /api/webhooks/customers/data_request",
+    "status_code": 404,
+    "expected_status": 200,
+    "success": false,
+    "response": {
+      "detail": "Not Found"
+    },
+    "error": null
+  },
+  {
+    "endpoint": "POST /api/webhooks/customers/redact",
+    "status_code": 404,
+    "expected_status": 200,
+    "success": false,
+    "response": {
+      "detail": "Not Found"
+    },
+    "error": null
+  },
+  {
+    "endpoint": "POST /api/webhooks/shop/redact",
+    "status_code": 404,
+    "expected_status": 200,
+    "success": false,
+    "response": {
+      "detail": "Not Found"
+    },
+    "error": null
+  }
+]
