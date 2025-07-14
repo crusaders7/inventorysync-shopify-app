@@ -1,0 +1,19 @@
+
+    <!DOCTYPE html>
+    <html>
+    <head>
+        <title>Setting up InventorySync...</title>
+    </head>
+    <body>
+        <h2>Setting up InventorySync Dev Environment...</h2>
+        <script>
+            localStorage.setItem('shopify_authenticated', 'true');
+            localStorage.setItem('shopify_shop_domain', 'inventorysync-dev.myshopify.com');
+            localStorage.setItem('shopify_access_token', 'shpat_dev_token_123456789');
+            setTimeout(() => {
+                window.location.href = 'http://localhost:3000/?authenticated=true&shop=inventorysync-dev.myshopify.com';
+            }, 1000);
+        </script>
+    </body>
+    </html>
+    

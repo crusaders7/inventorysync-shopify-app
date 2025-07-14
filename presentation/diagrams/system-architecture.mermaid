@@ -1,0 +1,41 @@
+graph TB
+    subgraph "Shopify Store"
+        SP[Shopify Products]
+        SI[Shopify Inventory]
+        SW[Shopify Webhooks]
+    end
+    
+    subgraph "Your Application"
+        API[REST API<br/>Node.js/Express]
+        WH[Webhook Handler]
+        SS[Sync Service]
+        DB[(MongoDB<br/>Database)]
+        
+        subgraph "Sync Logic"
+            SM[Stock Monitor]
+            IM[Inventory Mapper]
+            UM[Update Manager]
+        end
+    end
+    
+    subgraph "Inventory Sources"
+        ERP[ERP System]
+        WMS[Warehouse System]
+        CSV[CSV Files]
+    end
+    
+    SW -->|Product Updates| WH
+    WH --> DB
+    
+    ERP -->|Stock Data| API
+    WMS -->|Stock Data| API
+    CSV -->|Import| API
+    
+    API --> SS
+    SS --> SM
+    SM --> IM
+    IM --> UM
+    UM -->|Update Stock| SI
+    
+    DB -->|Store State| SS
+    SP <-->|Read Products| API

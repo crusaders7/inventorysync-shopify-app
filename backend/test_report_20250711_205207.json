@@ -1,0 +1,131 @@
+{
+  "passed": 19,
+  "failed": 6,
+  "tests": [
+    {
+      "name": "Main health endpoint",
+      "passed": true,
+      "details": "Status: healthy"
+    },
+    {
+      "name": "Database health",
+      "passed": true,
+      "details": "Database: healthy"
+    },
+    {
+      "name": "Get custom field definitions",
+      "passed": true,
+      "details": "Found 4 fields"
+    },
+    {
+      "name": "Get industry templates",
+      "passed": true,
+      "details": "Found 3 industries"
+    },
+    {
+      "name": "List alerts",
+      "passed": true,
+      "details": "Found 0 alerts"
+    },
+    {
+      "name": "Get store alerts",
+      "passed": true,
+      "details": "Total: 0"
+    },
+    {
+      "name": "Dashboard alerts",
+      "passed": true,
+      "details": "Count: 3"
+    },
+    {
+      "name": "List inventory",
+      "passed": true,
+      "details": "Total items: 3"
+    },
+    {
+      "name": "Inventory search",
+      "passed": true,
+      "details": ""
+    },
+    {
+      "name": "Inventory filters",
+      "passed": true,
+      "details": ""
+    },
+    {
+      "name": "Dashboard stats endpoint",
+      "passed": true,
+      "details": ""
+    },
+    {
+      "name": "  Total products",
+      "passed": false,
+      "details": ""
+    },
+    {
+      "name": "  Low stock count",
+      "passed": false,
+      "details": ""
+    },
+    {
+      "name": "  Total alerts",
+      "passed": false,
+      "details": ""
+    },
+    {
+      "name": "  Active alerts",
+      "passed": false,
+      "details": ""
+    },
+    {
+      "name": "  Total value",
+      "passed": false,
+      "details": ""
+    },
+    {
+      "name": "  Average value",
+      "passed": false,
+      "details": ""
+    },
+    {
+      "name": "Health check response time",
+      "passed": true,
+      "details": "3.71ms (Target: <500ms)"
+    },
+    {
+      "name": "Inventory list response time",
+      "passed": true,
+      "details": "2.11ms (Target: <500ms)"
+    },
+    {
+      "name": "Alerts list response time",
+      "passed": true,
+      "details": "1.88ms (Target: <500ms)"
+    },
+    {
+      "name": "Dashboard stats response time",
+      "passed": true,
+      "details": "1.94ms (Target: <500ms)"
+    },
+    {
+      "name": "Custom fields response time",
+      "passed": true,
+      "details": "3.09ms (Target: <500ms)"
+    },
+    {
+      "name": "404 error handling",
+      "passed": true,
+      "details": ""
+    },
+    {
+      "name": "Invalid shop domain handling",
+      "passed": true,
+      "details": ""
+    },
+    {
+      "name": "Rate limiting",
+      "passed": true,
+      "details": "Disabled in development (expected)"
+    }
+  ]
+}

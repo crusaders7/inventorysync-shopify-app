@@ -1,0 +1,349 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>InventorySync - Advanced Shopify Inventory Management</title>
+    
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/reveal.js@4.3.1/dist/reset.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/reveal.js@4.3.1/dist/reveal.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/reveal.js@4.3.1/dist/theme/black.css">
+    
+    <!-- Theme used for syntax highlighted code -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/reveal.js@4.3.1/plugin/highlight/monokai.css">
+    
+    <style>
+        .reveal h1, .reveal h2, .reveal h3 {
+            text-transform: none;
+        }
+        .reveal .slides section .fragment.highlight-current-blue.current-fragment {
+            color: #71C5E8;
+        }
+        .feature-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 20px;
+            font-size: 0.8em;
+        }
+        .tech-stack {
+            display: flex;
+            justify-content: space-around;
+            margin-top: 40px;
+        }
+        .tech-column {
+            text-align: left;
+            font-size: 0.8em;
+        }
+        .gradient-text {
+            background: linear-gradient(45deg, #5a67d8 16%, #dc2626 84%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+    </style>
+</head>
+<body>
+    <div class="reveal">
+        <div class="slides">
+            <!-- Title Slide -->
+            <section data-background-gradient="linear-gradient(to bottom, #1e3c72, #2a5298)">
+                <h1 class="gradient-text">InventorySync</h1>
+                <h3>Advanced Shopify Inventory Management System</h3>
+                <p>
+                    <small>Built with FastAPI + React + Shopify API</small>
+                </p>
+            </section>
+
+            <!-- Overview -->
+            <section>
+                <h2>Project Overview</h2>
+                <div class="feature-grid">
+                    <div class="fragment">
+                        <h4>🚀 Full-stack Application</h4>
+                        <p>Modern architecture with React & FastAPI</p>
+                    </div>
+                    <div class="fragment">
+                        <h4>📦 Real-time Sync</h4>
+                        <p>Bidirectional Shopify integration</p>
+                    </div>
+                    <div class="fragment">
+                        <h4>🏪 Multi-location</h4>
+                        <p>Manage inventory across locations</p>
+                    </div>
+                    <div class="fragment">
+                        <h4>📊 Analytics Dashboard</h4>
+                        <p>Real-time insights and KPIs</p>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Tech Stack -->
+            <section>
+                <h2>Technology Stack</h2>
+                <div class="tech-stack">
+                    <div class="tech-column">
+                        <h3>Backend</h3>
+                        <ul>
+                            <li class="fragment">FastAPI (Python)</li>
+                            <li class="fragment">PostgreSQL + SQLAlchemy</li>
+                            <li class="fragment">Redis Caching</li>
+                            <li class="fragment">JWT Authentication</li>
+                            <li class="fragment">Celery + Background Tasks</li>
+                        </ul>
+                    </div>
+                    <div class="tech-column">
+                        <h3>Frontend</h3>
+                        <ul>
+                            <li class="fragment">React 18</li>
+                            <li class="fragment">Shopify Polaris UI</li>
+                            <li class="fragment">Vite Build Tool</li>
+                            <li class="fragment">Chart.js Visualizations</li>
+                            <li class="fragment">App Bridge Integration</li>
+                        </ul>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Custom Fields Feature -->
+            <section>
+                <section>
+                    <h2>Core Feature: Custom Fields</h2>
+                    <p>Flexible metadata management for products</p>
+                </section>
+                
+                <section>
+                    <h3>Backend Implementation</h3>
+                    <pre><code class="language-python" data-trim data-line-numbers="1-15|5-13|16-28">
+from fastapi import APIRouter, HTTPException, Depends
+from sqlalchemy.orm import Session
+from models import Store, CustomFieldDefinition
+
+class CustomFieldCreate(BaseModel):
+    field_name: str
+    field_type: str
+    display_name: str
+    description: Optional[str] = ""
+    required: Optional[bool] = False
+    default_value: Optional[str] = ""
+    validation_rules: Optional[Dict[str, Any]] = {}
+    category: Optional[str] = "product"
+
+@router.post("/{shop_domain}")
+async def create_custom_field(
+    shop_domain: str, 
+    field_data: CustomFieldCreate, 
+    db: Session = Depends(get_db)
+):
+    """Create a new custom field"""
+    store = get_store(shop_domain, db)
+    if not store:
+        raise HTTPException(status_code=404, detail="Store not found")
+    
+    # Create and save field
+    new_field = CustomFieldDefinition(**field_data.dict())
+    db.add(new_field)
+    db.commit()
+                    </code></pre>
+                </section>
+
+                <section>
+                    <h3>Frontend Component</h3>
+                    <pre><code class="language-jsx" data-trim data-line-numbers="1-10|12-20|22-30">
+import React, { useState } from 'react';
+import { Card, Form, TextField, Select, Button } from '@shopify/polaris';
+
+const CustomFieldsManager = ({ shop, showToast }) => {
+  const [newField, setNewField] = useState({
+    field_name: '',
+    display_name: '',
+    field_type: 'text',
+    target_entity: 'product'
+  });
+
+  const fieldTypes = [
+    { label: 'Text', value: 'text' },
+    { label: 'Number', value: 'number' },
+    { label: 'Date', value: 'date' },
+    { label: 'Yes/No', value: 'boolean' },
+    { label: 'Dropdown', value: 'select' },
+    { label: 'Email', value: 'email' },
+    { label: 'URL', value: 'url' }
+  ];
+
+  const handleCreateField = async () => {
+    const response = await fetch(`/api/custom-fields/${shop}`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(newField)
+    });
+    if (response.ok) {
+      showToast('Field created successfully!');
+    }
+  };
+                    </code></pre>
+                </section>
+            </section>
+
+            <!-- Industry Templates -->
+            <section>
+                <h2>Industry Templates</h2>
+                <div class="fragment">
+                    <h3>👔 Apparel</h3>
+                    <p>Size, Color, Material, Season</p>
+                </div>
+                <div class="fragment">
+                    <h3>📱 Electronics</h3>
+                    <p>Warranty Period, Specifications, Compatibility</p>
+                </div>
+                <div class="fragment">
+                    <h3>🍔 Food & Beverage</h3>
+                    <p>Expiration Date, Batch Number, Storage Temp</p>
+                </div>
+            </section>
+
+            <!-- Database Schema -->
+            <section>
+                <h2>Database Optimization</h2>
+                <pre><code class="language-sql" data-trim>
+-- Optimized indexes for performance
+CREATE TABLE custom_field_definitions (
+    id BIGSERIAL PRIMARY KEY,
+    store_id BIGINT NOT NULL REFERENCES stores(id),
+    field_name VARCHAR(100) NOT NULL,
+    display_name VARCHAR(255) NOT NULL,
+    field_type VARCHAR(50) NOT NULL,
+    target_entity VARCHAR(50) DEFAULT 'product',
+    is_active BOOLEAN DEFAULT true
+);
+
+CREATE INDEX idx_custom_fields_store_id 
+    ON custom_field_definitions(store_id);
+CREATE INDEX idx_custom_fields_target_entity 
+    ON custom_field_definitions(target_entity);
+
+-- JSONB for flexible value storage
+CREATE TABLE custom_field_values (
+    id BIGSERIAL PRIMARY KEY,
+    field_id BIGINT REFERENCES custom_field_definitions(id),
+    entity_id VARCHAR(255) NOT NULL,
+    value JSONB NOT NULL
+);
+                </code></pre>
+            </section>
+
+            <!-- Webhook Integration -->
+            <section>
+                <h2>Real-time Webhook Integration</h2>
+                <pre><code class="language-python" data-trim>
+@router.post("/webhooks/products/update")
+async def handle_product_update(request: Request):
+    # Verify webhook signature
+    if not verify_webhook(request):
+        raise HTTPException(status_code=401)
+    
+    payload = await request.json()
+    product_id = payload.get("id")
+    
+    # Update inventory in background
+    await sync_product_inventory(product_id, payload)
+    
+    return {"status": "success"}
+                </code></pre>
+                <p class="fragment">
+                    ✅ Products • ✅ Inventory • ✅ Orders • ✅ Locations
+                </p>
+            </section>
+
+            <!-- Deployment -->
+            <section>
+                <h2>Production Deployment</h2>
+                <pre><code class="language-yaml" data-trim>
+# docker-compose.production.yml
+version: '3.8'
+services:
+  backend:
+    image: inventorysync/backend:latest
+    environment:
+      - DATABASE_URL=${DATABASE_URL}
+      - SHOPIFY_API_KEY=${SHOPIFY_API_KEY}
+    deploy:
+      replicas: 3
+      
+  frontend:
+    image: inventorysync/frontend:latest
+    ports:
+      - "80:80"
+      - "443:443"
+      
+  postgres:
+    image: postgres:15-alpine
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+                </code></pre>
+            </section>
+
+            <!-- Security -->
+            <section>
+                <h2>Security Best Practices</h2>
+                <ul>
+                    <li class="fragment">🔐 JWT Authentication</li>
+                    <li class="fragment">🛡️ CORS Protection</li>
+                    <li class="fragment">🔒 HTTPS Only</li>
+                    <li class="fragment">📝 Audit Logging</li>
+                    <li class="fragment">🚫 Rate Limiting</li>
+                    <li class="fragment">🔍 Input Validation</li>
+                </ul>
+            </section>
+
+            <!-- Future Roadmap -->
+            <section>
+                <h2>Future Roadmap</h2>
+                <div class="fragment">
+                    <h3>Q1 2025</h3>
+                    <p>🤖 AI Recommendations • 📱 Mobile App • 🌍 Multi-currency</p>
+                </div>
+                <div class="fragment">
+                    <h3>Q2 2025</h3>
+                    <p>🔗 ERP Integration • 📊 ML Analytics • 🏭 Manufacturing</p>
+                </div>
+                <div class="fragment">
+                    <h3>Q3 2025</h3>
+                    <p>🌐 Global Features • 🤝 B2B Wholesale • 📦 Dropshipping</p>
+                </div>
+            </section>
+
+            <!-- Thank You -->
+            <section data-background-gradient="linear-gradient(to bottom, #1e3c72, #2a5298)">
+                <h1>Thank You!</h1>
+                <p>Questions?</p>
+                <p>
+                    <small>
+                        <a href="https://github.com/yourusername/inventorysync-shopify-app">GitHub</a> • 
+                        <a href="https://inventorysync.prestigecorp.au">Live Demo</a> • 
+                        <a href="mailto:support@inventorysync.com">Contact</a>
+                    </small>
+                </p>
+            </section>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/reveal.js@4.3.1/dist/reveal.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/reveal.js@4.3.1/plugin/notes/notes.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/reveal.js@4.3.1/plugin/markdown/markdown.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/reveal.js@4.3.1/plugin/highlight/highlight.js"></script>
+    <script>
+        // More info about initialization & config:
+        // - https://revealjs.com/initialization/
+        // - https://revealjs.com/config/
+        Reveal.initialize({
+            hash: true,
+            transition: 'slide',
+            transitionSpeed: 'default',
+            backgroundTransition: 'fade',
+            
+            // Learn about plugins: https://revealjs.com/plugins/
+            plugins: [ RevealMarkdown, RevealHighlight, RevealNotes ]
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,212 @@
+{
+  "passed": 18,
+  "failed": 4,
+  "warnings": 0,
+  "start_time": "2025-07-12 22:11:23.712391",
+  "tests": [
+    {
+      "name": "Root Endpoint",
+      "endpoint": "GET /",
+      "status_code": 200,
+      "response_time": 0.618536,
+      "timestamp": "2025-07-12T22:11:24.343287",
+      "response_preview": "{'message': 'InventorySync Shopify App API', 'version': '1.0.0', 'status': 'healthy'}",
+      "result": "PASSED"
+    },
+    {
+      "name": "Basic Health",
+      "endpoint": "GET /health",
+      "status_code": 200,
+      "response_time": 0.541424,
+      "timestamp": "2025-07-12T22:11:24.886513",
+      "response_preview": "{'status': 'healthy', 'service': 'inventorysync-shopify-app', 'version': '1.0.0'}",
+      "result": "PASSED"
+    },
+    {
+      "name": "API Root",
+      "endpoint": "GET /api",
+      "status_code": 200,
+      "response_time": 0.587678,
+      "timestamp": "2025-07-12T22:11:25.475210",
+      "response_preview": "{'message': 'InventorySync API', 'version': '1.0.0', 'endpoints': {'health': '/health', 'api': '/api'}}",
+      "result": "PASSED"
+    },
+    {
+      "name": "Health Status",
+      "endpoint": "GET /health/health/",
+      "status_code": 200,
+      "response_time": 0.506089,
+      "timestamp": "2025-07-12T22:11:25.982855",
+      "response_preview": "{'status': 'healthy', 'timestamp': '2025-07-12T12:11:25.849439', 'service': 'inventorysync-api', 'version': '1.0.0'}",
+      "result": "PASSED"
+    },
+    {
+      "name": "Liveness Probe",
+      "endpoint": "GET /health/health/live",
+      "status_code": 200,
+      "response_time": 0.618945,
+      "timestamp": "2025-07-12T22:11:26.603016",
+      "response_preview": "{'status': 'alive'}",
+      "result": "PASSED"
+    },
+    {
+      "name": "Readiness Probe",
+      "endpoint": "GET /health/health/ready",
+      "status_code": 200,
+      "response_time": 0.539375,
+      "timestamp": "2025-07-12T22:11:27.143357",
+      "response_preview": "{'status': 'ready', 'checks': {'database': True, 'redis': True}}",
+      "result": "PASSED"
+    },
+    {
+      "name": "System Status",
+      "endpoint": "GET /health/health/status",
+      "status_code": 200,
+      "response_time": 1.621053,
+      "timestamp": "2025-07-12T22:11:28.766636",
+      "response_preview": "{'status': 'healthy', 'timestamp': '2025-07-12T12:11:28.631854', 'uptime_seconds': 1.0925593376159668, 'environment': 'production', 'system': {'cpu_percent': 36.9, 'memory': {'percent': 74.6, 'availab",
+      "result": "PASSED"
+    },
+    {
+      "name": "Metrics Summary",
+      "endpoint": "GET /health/health/metrics/summary",
+      "status_code": 200,
+      "response_time": 0.501046,
+      "timestamp": "2025-07-12T22:11:29.268741",
+      "response_preview": "{'timestamp': '2025-07-12T12:11:29.135680', 'performance': {'uptime_seconds': 0.00013399124145507812, 'total_requests': 0, 'total_errors': 0, 'error_rate_percent': 0, 'average_response_time_ms': 0, 'p",
+      "result": "PASSED"
+    },
+    {
+      "name": "Auth Status",
+      "endpoint": "GET /api/auth/api/v1/auth/status",
+      "status_code": 200,
+      "response_time": 0.561292,
+      "timestamp": "2025-07-12T22:11:29.831237",
+      "response_preview": "{'configured': False, 'error': 'Status check failed', 'timestamp': '2025-07-12T12:11:29.694713'}",
+      "result": "PASSED"
+    },
+    {
+      "name": "Install App",
+      "endpoint": "GET /api/auth/api/v1/auth/install?shop=test-shop.myshopify.com",
+      "status_code": 500,
+      "response_time": 0.511932,
+      "timestamp": "2025-07-12T22:11:30.344148",
+      "error": "Internal Server Error",
+      "result": "FAILED"
+    },
+    {
+      "name": "Dev Setup",
+      "endpoint": "POST /api/auth/api/v1/auth/dev-setup?shop=test-shop.myshopify.com",
+      "status_code": 500,
+      "response_time": 0.587622,
+      "timestamp": "2025-07-12T22:11:30.933642",
+      "error": {
+        "detail": "Setup failed: (psycopg2.errors.UndefinedTable) relation \"stores\" does not exist\nLINE 2: FROM stores \n             ^\n\n[SQL: SELECT stores.id AS stores_id, stores.shopify_domain AS stores_shopify_domain, stores.shop_name AS stores_shop_name, stores.email AS stores_email, stores.currency AS stores_currency, stores.timezone AS stores_timezone, stores.subscription_plan AS stores_subscription_plan, stores.subscription_status AS stores_subscription_status, stores.trial_ends_at AS stores_trial_ends_at, stores.shopify_charge_id AS stores_shopify_charge_id, stores.billing_cycle_start AS stores_billing_cycle_start, stores.billing_cycle_end AS stores_billing_cycle_end, stores.plan_price AS stores_plan_price, stores.usage_charges AS stores_usage_charges, stores.billing_currency AS stores_billing_currency, stores.deletion_scheduled_at AS stores_deletion_scheduled_at, stores.is_active AS stores_is_active, stores.uninstalled_at AS stores_uninstalled_at, stores.access_token AS stores_access_token, stores.created_at AS stores_created_at, stores.updated_at AS stores_updated_at \nFROM stores \nWHERE stores.shopify_domain = %(shopify_domain_1)s \n LIMIT %(param_1)s]\n[parameters: {'shopify_domain_1': 'test-shop.myshopify.com', 'param_1': 1}]\n(Background on this error at: https://sqlalche.me/e/20/f405)"
+      },
+      "result": "FAILED"
+    },
+    {
+      "name": "Monitoring Health",
+      "endpoint": "GET /api/monitoring/api/v1/monitoring/health",
+      "status_code": 200,
+      "response_time": 0.501059,
+      "timestamp": "2025-07-12T22:11:31.436158",
+      "response_preview": "{'status': 'healthy', 'timestamp': '2025-07-12T12:11:31.299336', 'uptime_seconds': 3600.0, 'database': 'healthy', 'memory_usage_percent': 50.0, 'cpu_usage_percent': 25.0}",
+      "result": "PASSED"
+    },
+    {
+      "name": "Simple Health",
+      "endpoint": "GET /api/monitoring/api/v1/monitoring/health/simple",
+      "status_code": 200,
+      "response_time": 0.535664,
+      "timestamp": "2025-07-12T22:11:31.972862",
+      "response_preview": "{'status': 'ok', 'timestamp': '2025-07-12T12:11:31.838928'}",
+      "result": "PASSED"
+    },
+    {
+      "name": "Metrics Summary",
+      "endpoint": "GET /api/monitoring/api/v1/monitoring/metrics/summary",
+      "status_code": 200,
+      "response_time": 0.494332,
+      "timestamp": "2025-07-12T22:11:32.468321",
+      "response_preview": "{'monitoring': 'disabled'}",
+      "result": "PASSED"
+    },
+    {
+      "name": "Performance Metrics",
+      "endpoint": "GET /api/monitoring/api/v1_monitoring/metrics",
+      "status_code": 404,
+      "response_time": 0.499217,
+      "timestamp": "2025-07-12T22:11:32.968384",
+      "error": {
+        "detail": "Not Found"
+      },
+      "result": "FAILED"
+    },
+    {
+      "name": "Recent Alerts",
+      "endpoint": "GET /api/monitoring/api/v1/monitoring/alerts",
+      "status_code": 500,
+      "response_time": 0.52342,
+      "timestamp": "2025-07-12T22:11:33.493146",
+      "error": {
+        "detail": "Failed to retrieve alerts"
+      },
+      "result": "FAILED"
+    },
+    {
+      "name": "System Info",
+      "endpoint": "GET /api/monitoring/api/v1/monitoring/system",
+      "status_code": 200,
+      "response_time": 0.527191,
+      "timestamp": "2025-07-12T22:11:34.021560",
+      "response_preview": "{'system': {'cpu_count': 4, 'cpu_percent': 25.0, 'memory': {'total_gb': 8.0, 'available_gb': 4.0, 'used_percent': 50.0}, 'disk': {'total_gb': 100.0, 'free_gb': 50.0, 'used_percent': 50.0}, 'network': ",
+      "result": "PASSED"
+    },
+    {
+      "name": "Recent Errors",
+      "endpoint": "GET /api/monitoring/api/v1/monitoring/logs/errors",
+      "status_code": 200,
+      "response_time": 0.497077,
+      "timestamp": "2025-07-12T22:11:34.519995",
+      "response_preview": "{'errors': [], 'total_count': 0, 'log_file': 'logs/errors.log', 'generated_at': '2025-07-12T12:11:34.386008'}",
+      "result": "PASSED"
+    },
+    {
+      "name": "Monitoring Config",
+      "endpoint": "GET /api/monitoring/api/v1/monitoring/config",
+      "status_code": 200,
+      "response_time": 0.495958,
+      "timestamp": "2025-07-12T22:11:35.017055",
+      "response_preview": "{'monitoring_enabled': True, 'log_level': 'INFO', 'environment': 'production', 'alert_thresholds': {'high_response_time_seconds': 5.0, 'high_error_rate_percent': 5.0, 'high_memory_usage_percent': 90.0",
+      "result": "PASSED"
+    },
+    {
+      "name": "OpenAPI Schema",
+      "endpoint": "GET /openapi.json",
+      "status_code": 200,
+      "response_time": 0.4947,
+      "timestamp": "2025-07-12T22:11:35.665588",
+      "response_preview": "{'openapi': '3.1.0', 'info': {'title': 'InventorySync Shopify App', 'description': 'Inventory synchronization and management for Shopify stores', 'version': '1.0.0'}, 'paths': {'/health/health/': {'ge",
+      "result": "PASSED"
+    },
+    {
+      "name": "Swagger UI",
+      "endpoint": "GET /docs",
+      "status_code": 200,
+      "response_time": 0.498717,
+      "timestamp": "2025-07-12T22:11:36.167236",
+      "response_preview": "\n    <!DOCTYPE html>\n    <html>\n    <head>\n    <link type=\"text/css\" rel=\"stylesheet\" href=\"https://cdn.jsdelivr.net/npm/swagger-ui-dist@5.9.0/swagger-ui.css\">\n    <link rel=\"shortcut icon\" href=\"http",
+      "result": "PASSED"
+    },
+    {
+      "name": "ReDoc",
+      "endpoint": "GET /redoc",
+      "status_code": 200,
+      "response_time": 0.503204,
+      "timestamp": "2025-07-12T22:11:36.671592",
+      "response_preview": "\n    <!DOCTYPE html>\n    <html>\n    <head>\n    <title>InventorySync Shopify App - ReDoc</title>\n    <!-- needed for adaptive design -->\n    <meta charset=\"utf-8\"/>\n    <meta name=\"viewport\" content=\"w",
+      "result": "PASSED"
+    }
+  ]
+}

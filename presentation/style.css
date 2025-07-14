@@ -1,0 +1,102 @@
+/* Custom styles for InventorySync presentation */
+
+/* Syntax highlighting theme */
+.slidev-code {
+  @apply rounded-lg shadow-lg;
+}
+
+/* Custom badge styles */
+.badge {
+  @apply inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium;
+}
+
+.badge-success {
+  @apply bg-green-100 text-green-800;
+}
+
+.badge-warning {
+  @apply bg-yellow-100 text-yellow-800;
+}
+
+.badge-error {
+  @apply bg-red-100 text-red-800;
+}
+
+/* Animation for icons */
+@keyframes pulse {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: .5;
+  }
+}
+
+.animate-pulse {
+  animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+
+/* Better code block styling */
+pre {
+  @apply bg-gray-900 text-gray-100 p-4 rounded-lg overflow-x-auto;
+}
+
+/* Mermaid diagram styling */
+.mermaid {
+  @apply flex justify-center items-center;
+}
+
+/* Custom heading styles */
+h1 {
+  @apply text-4xl font-bold mb-4;
+}
+
+h2 {
+  @apply text-2xl font-semibold mb-3;
+}
+
+h3 {
+  @apply text-xl font-medium mb-2;
+}
+
+/* Better list styling */
+ul {
+  @apply space-y-2;
+}
+
+li {
+  @apply flex items-start;
+}
+
+/* Card-like sections */
+.card {
+  @apply bg-white dark:bg-gray-800 rounded-lg shadow-lg p-6;
+}
+
+/* Gradient text */
+.gradient-text {
+  @apply bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent;
+}
+
+/* Icon buttons */
+.slidev-icon-btn {
+  @apply transition-colors duration-200;
+}
+
+/* Table styling */
+table {
+  @apply w-full text-left;
+}
+
+th {
+  @apply border-b-2 border-gray-300 dark:border-gray-600 pb-2;
+}
+
+td {
+  @apply py-2;
+}
+
+/* Responsive images */
+img {
+  @apply max-w-full h-auto rounded-lg shadow-md;
+}

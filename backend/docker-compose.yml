@@ -1,0 +1,107 @@
+version: '3.8'
+
+services:
+  # PostgreSQL database for production
+  postgres:
+    image: postgres:15-alpine
+    container_name: inventorysync_postgres
+    environment:
+      POSTGRES_DB: inventorysync
+      POSTGRES_USER: inventorysync_user
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-secure_password_change_me}
+      PGDATA: /var/lib/postgresql/data/pgdata
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./init-scripts:/docker-entrypoint-initdb.d
+    ports:
+      - "5432:5432"
+    networks:
+      - inventorysync_network
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U inventorysync_user -d inventorysync"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # Redis for caching and background tasks
+  redis:
+    image: redis:7-alpine
+    container_name: inventorysync_redis
+    command: redis-server --appendonly yes --requirepass ${REDIS_PASSWORD:-redis_password_change_me}
+    volumes:
+      - redis_data:/data
+    ports:
+      - "6379:6379"
+    networks:
+      - inventorysync_network
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "redis-cli", "--raw", "incr", "ping"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # InventorySync API
+  api:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: inventorysync_api
+    environment:
+      - DATABASE_URL=postgresql://inventorysync_user:${POSTGRES_PASSWORD:-secure_password_change_me}@postgres:5432/inventorysync
+      - REDIS_URL=redis://:${REDIS_PASSWORD:-redis_password_change_me}@redis:6379/0
+      - ENVIRONMENT=production
+      - DEBUG=false
+    ports:
+      - "8000:8000"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    networks:
+      - inventorysync_network
+    restart: unless-stopped
+    volumes:
+      - ./logs:/app/logs
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # Database backup service
+  backup:
+    image: postgres:15-alpine
+    container_name: inventorysync_backup
+    environment:
+      POSTGRES_DB: inventorysync
+      POSTGRES_USER: inventorysync_user
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-secure_password_change_me}
+      PGPASSWORD: ${POSTGRES_PASSWORD:-secure_password_change_me}
+    volumes:
+      - ./backups:/backups
+      - ./backup-scripts:/scripts
+    networks:
+      - inventorysync_network
+    depends_on:
+      - postgres
+    profiles:
+      - backup
+    command: >
+      sh -c "
+        echo 'Setting up backup cron job...'
+        echo '0 2 * * * /scripts/backup.sh' | crontab -
+        crond -f
+      "
+
+volumes:
+  postgres_data:
+    driver: local
+  redis_data:
+    driver: local
+
+networks:
+  inventorysync_network:
+    driver: bridge

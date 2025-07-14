@@ -1,0 +1,30 @@
+# Development Dockerfile for Frontend
+FROM node:18-alpine
+
+# Install additional tools
+RUN apk add --no-cache \
+    curl \
+    git
+
+# Set working directory
+WORKDIR /app
+
+# Copy package files
+COPY frontend/package*.json ./
+
+# Install dependencies
+RUN npm ci
+
+# Environment variables
+ENV NODE_ENV=development \
+    CHOKIDAR_USEPOLLING=true
+
+# Expose Vite dev server port
+EXPOSE 5173
+
+# Health check
+HEALTHCHECK --interval=30s --timeout=10s --start-period=40s --retries=3 \
+    CMD curl -f http://localhost:5173/ || exit 1
+
+# Default command
+CMD ["npm", "run", "dev", "--", "--host", "0.0.0.0"]

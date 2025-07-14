@@ -1,0 +1,138 @@
+# InventorySync - Shopify App .gitignore
+
+# Environment and Config Files
+.env
+.env.local
+.env.production
+.env.staging
+config/secrets.json
+shopify.app.toml
+
+# API Keys and Credentials
+*.key
+*.pem
+credentials/
+secrets/
+
+# Database
+*.db
+*.sqlite
+*.sqlite3
+database.url
+migrations/versions/*
+!migrations/versions/.gitkeep
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+MANIFEST
+
+# Virtual Environment
+venv/
+env/
+ENV/
+.venv/
+
+# Node.js and Frontend
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.pnpm-debug.log*
+
+# React/Frontend Build
+build/
+dist/
+.next/
+.nuxt/
+.vercel/
+
+# IDE and Editor Files
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+Thumbs.db
+
+# Logs
+logs/
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+lerna-debug.log*
+
+# Testing
+.coverage
+.pytest_cache/
+coverage/
+.nyc_output/
+test-results/
+coverage.xml
+
+# Temporary Files
+tmp/
+temp/
+*.tmp
+*.temp
+
+# OS Generated Files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# Shopify Specific
+.shopify/
+extensions/
+shopify-app-session.json
+
+# Docker
+docker-compose.override.yml
+.dockerignore
+
+# Deployment
+.vercel/
+.railway/
+.heroku/
+
+# Analytics and Monitoring
+.sentry-native/
+
+# Documentation Build
+docs/_build/
+site/
+
+# Backup Files
+*.backup
+*.bak
+*.orig*.backup
+node_modules/
+venv/
+__pycache__/
+*.pyc
+.env
+.env.production

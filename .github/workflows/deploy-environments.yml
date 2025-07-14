@@ -1,0 +1,265 @@
+name: Deploy to Environments
+
+on:
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: 'Environment to deploy to'
+        required: true
+        type: choice
+        options:
+          - staging
+          - production
+      version:
+        description: 'Version/tag to deploy (leave empty for latest)'
+        required: false
+        type: string
+  push:
+    branches:
+      - main
+      - develop
+
+env:
+  DOCKER_REGISTRY: ghcr.io
+  IMAGE_NAME: ${{ github.repository }}
+
+jobs:
+  # Prepare deployment
+  prepare:
+    name: Prepare Deployment
+    runs-on: ubuntu-latest
+    outputs:
+      version: ${{ steps.version.outputs.version }}
+      environment: ${{ steps.environment.outputs.environment }}
+    
+    steps:
+    - uses: actions/checkout@v3
+    
+    - name: Determine version
+      id: version
+      run: |
+        if [ "${{ github.event.inputs.version }}" != "" ]; then
+          echo "version=${{ github.event.inputs.version }}" >> $GITHUB_OUTPUT
+        else
+          echo "version=${{ github.sha }}" >> $GITHUB_OUTPUT
+        fi
+    
+    - name: Determine environment
+      id: environment
+      run: |
+        if [ "${{ github.event_name }}" == "workflow_dispatch" ]; then
+          echo "environment=${{ github.event.inputs.environment }}" >> $GITHUB_OUTPUT
+        elif [ "${{ github.ref }}" == "refs/heads/main" ]; then
+          echo "environment=production" >> $GITHUB_OUTPUT
+        elif [ "${{ github.ref }}" == "refs/heads/develop" ]; then
+          echo "environment=staging" >> $GITHUB_OUTPUT
+        else
+          echo "environment=none" >> $GITHUB_OUTPUT
+        fi
+
+  # Deploy to Staging
+  deploy-staging:
+    name: Deploy to Staging
+    needs: prepare
+    if: needs.prepare.outputs.environment == 'staging'
+    runs-on: ubuntu-latest
+    environment:
+      name: staging
+      url: https://staging.inventorysync.app
+    
+    steps:
+    - uses: actions/checkout@v3
+    
+    - name: Install Railway CLI
+      run: |
+        curl -fsSL https://railway.app/install.sh | sh
+    
+    - name: Deploy Backend to Railway Staging
+      env:
+        RAILWAY_TOKEN: ${{ secrets.RAILWAY_STAGING_TOKEN }}
+      run: |
+        railway up --service backend --environment staging
+    
+    - name: Deploy Frontend to Railway Staging
+      env:
+        RAILWAY_TOKEN: ${{ secrets.RAILWAY_STAGING_TOKEN }}
+      run: |
+        railway up --service frontend --environment staging
+    
+    - name: Run database migrations
+      env:
+        RAILWAY_TOKEN: ${{ secrets.RAILWAY_STAGING_TOKEN }}
+      run: |
+        railway run --service backend --environment staging \
+          python -m alembic upgrade head
+    
+    - name: Health check
+      run: |
+        sleep 30
+        max_attempts=10
+        attempt=1
+        while [ $attempt -le $max_attempts ]; do
+          if curl -f https://staging.inventorysync.app/api/health; then
+            echo "Health check passed"
+            break
+          fi
+          echo "Health check failed, attempt $attempt of $max_attempts"
+          sleep 10
+          attempt=$((attempt + 1))
+        done
+        if [ $attempt -gt $max_attempts ]; then
+          echo "Health check failed after $max_attempts attempts"
+          exit 1
+        fi
+    
+    - name: Run smoke tests
+      run: |
+        npm install -g newman
+        newman run ./tests/postman/staging-smoke-tests.json \
+          --environment ./tests/postman/staging-environment.json \
+          --reporters cli,json \
+          --reporter-json-export staging-test-results.json
+    
+    - name: Upload test results
+      uses: actions/upload-artifact@v3
+      if: always()
+      with:
+        name: staging-test-results
+        path: staging-test-results.json
+
+  # Deploy to Production
+  deploy-production:
+    name: Deploy to Production
+    needs: prepare
+    if: needs.prepare.outputs.environment == 'production'
+    runs-on: ubuntu-latest
+    environment:
+      name: production
+      url: https://inventorysync.app
+    
+    steps:
+    - uses: actions/checkout@v3
+    
+    - name: Create deployment
+      uses: chrnorm/deployment-action@v2
+      id: deployment
+      with:
+        token: ${{ github.token }}
+        environment: production
+        description: 'Deploying version ${{ needs.prepare.outputs.version }} to production'
+    
+    - name: Install Railway CLI
+      run: |
+        curl -fsSL https://railway.app/install.sh | sh
+    
+    - name: Backup production database
+      env:
+        RAILWAY_TOKEN: ${{ secrets.RAILWAY_PRODUCTION_TOKEN }}
+      run: |
+        railway run --service backend --environment production \
+          python scripts/backup_database.py --type pre-deployment
+    
+    - name: Deploy Backend to Railway Production
+      env:
+        RAILWAY_TOKEN: ${{ secrets.RAILWAY_PRODUCTION_TOKEN }}
+      run: |
+        railway up --service backend --environment production
+    
+    - name: Deploy Frontend to Railway Production
+      env:
+        RAILWAY_TOKEN: ${{ secrets.RAILWAY_PRODUCTION_TOKEN }}
+      run: |
+        railway up --service frontend --environment production
+    
+    - name: Run database migrations
+      env:
+        RAILWAY_TOKEN: ${{ secrets.RAILWAY_PRODUCTION_TOKEN }}
+      run: |
+        railway run --service backend --environment production \
+          python -m alembic upgrade head
+    
+    - name: Health check
+      run: |
+        sleep 30
+        max_attempts=15
+        attempt=1
+        while [ $attempt -le $max_attempts ]; do
+          if curl -f https://inventorysync.app/api/health; then
+            echo "Health check passed"
+            break
+          fi
+          echo "Health check failed, attempt $attempt of $max_attempts"
+          sleep 15
+          attempt=$((attempt + 1))
+        done
+        if [ $attempt -gt $max_attempts ]; then
+          echo "Health check failed after $max_attempts attempts"
+          exit 1
+        fi
+    
+    - name: Run production smoke tests
+      run: |
+        npm install -g newman
+        newman run ./tests/postman/production-smoke-tests.json \
+          --environment ./tests/postman/production-environment.json \
+          --reporters cli,json \
+          --reporter-json-export production-test-results.json
+    
+    - name: Update deployment status
+      uses: chrnorm/deployment-status@v2
+      if: always()
+      with:
+        token: ${{ github.token }}
+        deployment-id: ${{ steps.deployment.outputs.deployment_id }}
+        state: ${{ job.status }}
+        environment-url: https://inventorysync.app
+    
+    - name: Upload test results
+      uses: actions/upload-artifact@v3
+      if: always()
+      with:
+        name: production-test-results
+        path: production-test-results.json
+
+  # Rollback capability
+  rollback:
+    name: Rollback Deployment
+    runs-on: ubuntu-latest
+    if: failure() && (needs.deploy-staging.result == 'failure' || needs.deploy-production.result == 'failure')
+    needs: [deploy-staging, deploy-production]
+    
+    steps:
+    - uses: actions/checkout@v3
+    
+    - name: Determine environment to rollback
+      id: rollback-env
+      run: |
+        if [ "${{ needs.deploy-production.result }}" == "failure" ]; then
+          echo "environment=production" >> $GITHUB_OUTPUT
+        else
+          echo "environment=staging" >> $GITHUB_OUTPUT
+        fi
+    
+    - name: Rollback deployment
+      env:
+        RAILWAY_TOKEN: ${{ steps.rollback-env.outputs.environment == 'production' && secrets.RAILWAY_PRODUCTION_TOKEN || secrets.RAILWAY_STAGING_TOKEN }}
+      run: |
+        echo "Rolling back ${{ steps.rollback-env.outputs.environment }} deployment"
+        # Railway automatically maintains deployment history
+        # This would typically involve reverting to the previous deployment
+        railway rollback --environment ${{ steps.rollback-env.outputs.environment }}
+    
+    - name: Notify rollback
+      uses: 8398a7/action-slack@v3
+      with:
+        status: custom
+        custom_payload: |
+          {
+            text: "⚠️ Deployment Rollback",
+            attachments: [{
+              color: 'warning',
+              text: `Rolled back ${{ steps.rollback-env.outputs.environment }} deployment due to failure`
+            }]
+          }
+        webhook_url: ${{ secrets.SLACK_WEBHOOK }}
+      if: always()

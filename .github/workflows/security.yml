@@ -1,0 +1,199 @@
+name: Security Scanning
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main ]
+  schedule:
+    # Run security scans daily at 2 AM UTC
+    - cron: '0 2 * * *'
+
+permissions:
+  contents: read
+  security-events: write
+
+jobs:
+  # Static Application Security Testing (SAST)
+  codeql-analysis:
+    name: CodeQL Analysis
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        language: [ 'javascript', 'python' ]
+    
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v3
+    
+    - name: Initialize CodeQL
+      uses: github/codeql-action/init@v2
+      with:
+        languages: ${{ matrix.language }}
+        queries: security-and-quality
+    
+    - name: Autobuild
+      uses: github/codeql-action/autobuild@v2
+    
+    - name: Perform CodeQL Analysis
+      uses: github/codeql-action/analyze@v2
+      with:
+        category: "/language:${{matrix.language}}"
+
+  # Container security scanning
+  container-security:
+    name: Container Security Scan
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v3
+    
+    - name: Build backend image
+      run: docker build -t inventorysync-backend:scan ./backend
+    
+    - name: Build frontend image
+      run: docker build -t inventorysync-frontend:scan ./frontend
+    
+    - name: Run Trivy vulnerability scanner on backend
+      uses: aquasecurity/trivy-action@master
+      with:
+        image-ref: 'inventorysync-backend:scan'
+        format: 'sarif'
+        output: 'trivy-backend-results.sarif'
+        severity: 'CRITICAL,HIGH'
+    
+    - name: Run Trivy vulnerability scanner on frontend
+      uses: aquasecurity/trivy-action@master
+      with:
+        image-ref: 'inventorysync-frontend:scan'
+        format: 'sarif'
+        output: 'trivy-frontend-results.sarif'
+        severity: 'CRITICAL,HIGH'
+    
+    - name: Upload Backend Trivy scan results to GitHub Security tab
+      uses: github/codeql-action/upload-sarif@v2
+      with:
+        sarif_file: 'trivy-backend-results.sarif'
+        category: 'trivy-backend'
+    
+    - name: Upload Frontend Trivy scan results to GitHub Security tab
+      uses: github/codeql-action/upload-sarif@v2
+      with:
+        sarif_file: 'trivy-frontend-results.sarif'
+        category: 'trivy-frontend'
+
+  # Dependency vulnerability scanning
+  dependency-check:
+    name: Dependency Security Check
+    runs-on: ubuntu-latest
+    
+    steps:
+    - uses: actions/checkout@v3
+    
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.12'
+    
+    - name: Set up Node.js
+      uses: actions/setup-node@v3
+      with:
+        node-version: '18'
+    
+    # Python dependency check
+    - name: Install Python security tools
+      run: |
+        pip install safety bandit pip-audit
+    
+    - name: Run Safety check
+      working-directory: ./backend
+      run: |
+        pip install -r requirements.txt
+        safety check --json > safety-report.json || true
+        safety check || true
+    
+    - name: Run Bandit security linter
+      working-directory: ./backend
+      run: |
+        bandit -r . -f json -o bandit-report.json || true
+        bandit -r . || true
+    
+    - name: Run pip-audit
+      working-directory: ./backend
+      run: |
+        pip-audit || true
+    
+    # JavaScript dependency check
+    - name: Run npm audit
+      working-directory: ./frontend
+      run: |
+        npm audit --json > npm-audit-report.json || true
+        npm audit || true
+    
+    - name: Run Snyk security test
+      uses: snyk/actions/node@master
+      env:
+        SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
+      with:
+        args: --severity-threshold=high
+      continue-on-error: true
+    
+    # Upload reports as artifacts
+    - name: Upload security reports
+      uses: actions/upload-artifact@v3
+      if: always()
+      with:
+        name: security-reports
+        path: |
+          ./backend/safety-report.json
+          ./backend/bandit-report.json
+          ./frontend/npm-audit-report.json
+
+  # Secret scanning
+  secret-scan:
+    name: Secret Scanning
+    runs-on: ubuntu-latest
+    
+    steps:
+    - uses: actions/checkout@v3
+    
+    - name: Run Gitleaks
+      uses: gitleaks/gitleaks-action@v2
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        GITLEAKS_LICENSE: ${{ secrets.GITLEAKS_LICENSE }}
+    
+    - name: Run TruffleHog
+      uses: trufflesecurity/trufflehog@main
+      with:
+        path: ./
+        base: ${{ github.event.repository.default_branch }}
+        head: HEAD
+        extra_args: --debug --only-verified
+
+  # OWASP dependency check
+  owasp-check:
+    name: OWASP Dependency Check
+    runs-on: ubuntu-latest
+    
+    steps:
+    - uses: actions/checkout@v3
+    
+    - name: Run OWASP Dependency Check
+      uses: dependency-check/Dependency-Check_Action@main
+      with:
+        project: 'InventorySync'
+        path: '.'
+        format: 'ALL'
+        args: >
+          --enableRetired
+          --enableExperimental
+    
+    - name: Upload OWASP results
+      uses: actions/upload-artifact@v3
+      if: always()
+      with:
+        name: owasp-reports
+        path: reports/

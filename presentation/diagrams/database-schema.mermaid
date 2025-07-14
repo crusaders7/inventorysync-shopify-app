@@ -1,0 +1,55 @@
+erDiagram
+    PRODUCTS ||--o{ INVENTORY_ITEMS : has
+    INVENTORY_ITEMS ||--o{ SYNC_LOGS : tracks
+    INVENTORY_SOURCES ||--o{ INVENTORY_UPDATES : provides
+    INVENTORY_ITEMS ||--|| INVENTORY_MAPPINGS : maps
+    
+    PRODUCTS {
+        string shopify_id PK
+        string title
+        string handle
+        array variants
+        datetime updated_at
+    }
+    
+    INVENTORY_ITEMS {
+        string _id PK
+        string shopify_variant_id
+        string shopify_inventory_item_id
+        string sku
+        number quantity
+        string location_id
+    }
+    
+    INVENTORY_MAPPINGS {
+        string _id PK
+        string source_sku
+        string shopify_sku
+        string mapping_type
+        object rules
+    }
+    
+    INVENTORY_SOURCES {
+        string _id PK
+        string name
+        string type
+        object config
+        boolean active
+    }
+    
+    INVENTORY_UPDATES {
+        string _id PK
+        string source_id FK
+        array items
+        string status
+        datetime created_at
+    }
+    
+    SYNC_LOGS {
+        string _id PK
+        string inventory_item_id FK
+        number old_quantity
+        number new_quantity
+        string sync_type
+        datetime synced_at
+    }
