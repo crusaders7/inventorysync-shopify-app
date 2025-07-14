@@ -1,0 +1,24 @@
+sequenceDiagram
+    participant IS as Inventory Source
+    participant API as Your API
+    participant DB as MongoDB
+    participant SS as Sync Service
+    participant SA as Shopify API
+    
+    IS->>API: POST /inventory/update
+    API->>DB: Store update
+    API->>SS: Trigger sync
+    
+    SS->>DB: Get mappings
+    SS->>SA: GET /products
+    SA-->>SS: Product data
+    
+    SS->>SS: Match SKUs
+    SS->>SS: Calculate changes
+    
+    SS->>SA: POST /inventory_levels/set
+    SA-->>SS: Confirmation
+    
+    SS->>DB: Log sync result
+    SS-->>API: Sync complete
+    API-->>IS: 200 OK

@@ -46,30 +46,33 @@ class ShopifyBillingClient:
             }
         }
         
-        try:
-            async with httpx.AsyncClient() as client:
-                response = await client.post(
-                    self.base_url + ".json",
-                    headers=self.headers,
-                    json=charge_data,
-                    timeout=30.0
-                )
-                response.raise_for_status()
-                
-                result = response.json()
-                logger.info(
-                    f"Created recurring charge",
-                    shop_domain=self.shop_domain,
-                    charge_id=result["recurring_application_charge"]["id"],
-                    plan=plan_name,
-                    price=price
-                )
-                
-                return result["recurring_application_charge"]
-                
-        except httpx.HTTPError as e:
-            logger.error(f"Failed to create recurring charge: {e}")
-            raise Exception(f"Billing API error: {str(e)}")
+        retries = 3
+        for attempt in range(retries):
+            try:
+                async with httpx.AsyncClient() as client:
+                    response = await client.post(
+                        self.base_url + ".json",
+                        headers=self.headers,
+                        json=charge_data,
+                        timeout=30.0
+                    )
+                    response.raise_for_status()
+                    
+                    result = response.json()
+                    logger.info(
+                        f"Created recurring charge",
+                        shop_domain=self.shop_domain,
+                        charge_id=result["recurring_application_charge"]["id"],
+                        plan=plan_name,
+                        price=price
+                    )
+                    
+                    return result["recurring_application_charge"]
+
+            except httpx.HTTPStatusError as e:
+                logger.error(f"Attempt {attempt + 1}: Failed to create recurring charge: {e}")
+                if attempt == retries - 1:
+                    raise Exception(f"Billing API error: {str(e)}")
     
     async def activate_charge(self, charge_id: str) -> Dict[str, Any]:
         """Activate a recurring charge after merchant approval"""
@@ -183,58 +186,25 @@ class BillingPlanManager:
     """Manages subscription plans and pricing"""
     
     PLANS = {
-        "starter": {
-            "name": "FlexInventory Starter",
-            "price": 49.0,
-            "features": [
-                "Up to 1,000 products",
-                "5 custom fields per product",
-                "Basic alerts",
-                "Email support"
-            ],
-            "limits": {
-                "products": 1000,
-                "custom_fields": 5,
-                "locations": 1,
-                "workflows": 3
-            }
-        },
-        "growth": {
-            "name": "FlexInventory Growth", 
-            "price": 149.0,
-            "features": [
-                "Up to 10,000 products",
-                "Unlimited custom fields",
-                "Advanced workflows",
-                "Custom alerts",
-                "Multi-location support",
-                "Industry templates",
-                "Priority support"
-            ],
-            "limits": {
-                "products": 10000,
-                "custom_fields": -1,  # unlimited
-                "locations": 10,
-                "workflows": -1
-            }
-        },
-        "pro": {
-            "name": "FlexInventory Pro",
-            "price": 299.0,
+        "unlimited": {
+            "name": "InventorySync Unlimited",
+            "price": 29.0,
+            "trial_days": 14,
             "features": [
                 "Unlimited products",
                 "Unlimited custom fields",
-                "Advanced workflows & automation",
-                "Custom integrations API",
-                "White-label reporting",
-                "Multi-channel sync",
-                "24/7 phone support"
+                "All field types (text, number, date, select, etc.)",
+                "Industry-specific templates",
+                "Bulk import/export",
+                "API access",
+                "Email support",
+                "No Shopify Plus required!"
             ],
             "limits": {
-                "products": -1,
-                "custom_fields": -1,
-                "locations": -1,
-                "workflows": -1
+                "products": -1,  # unlimited
+                "custom_fields": -1,  # unlimited
+                "locations": -1,  # unlimited
+                "workflows": -1  # unlimited
             }
         }
     }
@@ -242,7 +212,7 @@ class BillingPlanManager:
     @classmethod
     def get_plan_details(cls, plan_name: str) -> Dict[str, Any]:
         """Get plan configuration"""
-        return cls.PLANS.get(plan_name, cls.PLANS["starter"])
+        return cls.PLANS.get(plan_name, cls.PLANS["unlimited"])
     
     @classmethod
     def check_feature_limit(cls, plan_name: str, feature: str, current_count: int) -> bool:
@@ -275,7 +245,7 @@ class BillingPlanManager:
         return None
 
 
-async def initialize_billing_for_store(shop_domain: str, access_token: str, plan: str = "growth") -> Optional[str]:
+async def initialize_billing_for_store(shop_domain: str, access_token: str, plan: str = "unlimited") -> Optional[str]:
     """Initialize billing for a new store installation"""
     
     billing_client = ShopifyBillingClient(shop_domain, access_token)
@@ -286,7 +256,7 @@ async def initialize_billing_for_store(shop_domain: str, access_token: str, plan
         charge = await billing_client.create_recurring_charge(
             plan_name=plan_details["name"],
             price=plan_details["price"],
-            trial_days=7  # 7-day free trial
+            trial_days=plan_details.get("trial_days", 14)  # 14-day free trial
         )
         
         # Return confirmation URL for merchant approval

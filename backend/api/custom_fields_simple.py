@@ -82,11 +82,8 @@ async def get_field_templates():
 @router.get("/{shop_domain}")
 async def get_shop_custom_fields(shop_domain: str):
     """Get all custom fields for a specific shop"""
-    shop_fields = [
-        field for field in custom_fields_store.values()
-        if field.get("shop_domain") == shop_domain
-    ]
-    
+    shop_fields = list(filter(lambda field: field.get("shop_domain") == shop_domain, custom_fields_store.values()))
+
     return {
         "shop_domain": shop_domain,
         "fields": shop_fields,
@@ -97,6 +94,12 @@ async def get_shop_custom_fields(shop_domain: str):
 @router.post("/{shop_domain}")
 async def create_custom_field(shop_domain: str, field_data: Dict[str, Any]):
     """Create a new custom field for products"""
+    # Validate required fields
+    if not field_data.get("field_name"):
+        raise HTTPException(status_code=400, detail="field_name is required")
+    if not field_data.get("display_name"):
+        raise HTTPException(status_code=400, detail="display_name is required")
+    
     field_id = f"{shop_domain}_{field_data.get('field_name', 'field')}_{datetime.now().timestamp()}"
     
     new_field = {

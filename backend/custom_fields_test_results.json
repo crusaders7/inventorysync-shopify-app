@@ -1,0 +1,48 @@
+{
+  "passed": 4,
+  "failed": 3,
+  "details": [
+    {
+      "test": "Create Custom Field",
+      "passed": false,
+      "details": "Status 404: {\"detail\":\"Not Found\"}",
+      "timestamp": "2025-07-13T09:17:07.991902"
+    },
+    {
+      "test": "Read Custom Fields",
+      "passed": false,
+      "details": "No valid endpoint found",
+      "timestamp": "2025-07-13T09:17:08.004630"
+    },
+    {
+      "test": "Field Validation Rules",
+      "passed": true,
+      "details": "5/5 validation tests passed",
+      "timestamp": "2025-07-13T09:17:08.005099"
+    },
+    {
+      "test": "Bulk Field Operations",
+      "passed": false,
+      "details": "Created 0/5 fields in 0.02s",
+      "timestamp": "2025-07-13T09:17:08.022415"
+    },
+    {
+      "test": "Field Mapping",
+      "passed": true,
+      "details": "Validated 3 field mappings",
+      "timestamp": "2025-07-13T09:17:08.022630"
+    },
+    {
+      "test": "Field Synchronization",
+      "passed": true,
+      "details": "4/4 sync tests passed",
+      "timestamp": "2025-07-13T09:17:08.022791"
+    },
+    {
+      "test": "Error Handling",
+      "passed": true,
+      "details": "3/4 error cases handled correctly",
+      "timestamp": "2025-07-13T09:17:08.037767"
+    }
+  ]
+}

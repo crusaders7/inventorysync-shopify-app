@@ -63,13 +63,18 @@ def register_routers():
     except ImportError as e:
         logger.warning(f"Health router not available: {e}")
 
-    # Authentication
+    # Authentication - Use full OAuth-enabled router
     try:
-        from api.auth_simple import router as auth_router
-        app.include_router(auth_router, prefix="/api/auth", tags=["authentication"])
-        logger.info("Auth router registered")
-    except ImportError as e:
-        logger.warning(f"Auth router not available: {e}")
+        from api.auth import router as auth_router
+        app.include_router(auth_router, tags=["authentication"])
+        logger.info("Full OAuth auth router registered")
+    except ImportError:
+        try:
+            from api.auth_simple import router as auth_router
+            app.include_router(auth_router, prefix="/api/auth", tags=["authentication"])
+            logger.info("Simple auth router registered (fallback)")
+        except ImportError as e:
+            logger.warning(f"No auth router available: {e}")
 
     # Inventory Management - Use simplified version
     try:
@@ -187,6 +192,19 @@ def register_routers():
         logger.info("Metafields router registered - Direct Shopify integration enabled!")
     except ImportError as e:
         logger.warning(f"Metafields router not available: {e}")
+    
+    # Bulk Metafields API - High performance bulk operations!
+    try:
+        from api.metafields_bulk import router as bulk_metafields_router
+        app.include_router(bulk_metafields_router, prefix="/api/v1/metafields", tags=["metafields-bulk"])
+        logger.info("Bulk metafields router registered - High performance bulk operations enabled!")
+    except ImportError:
+        try:
+            from app.api.v1.endpoints.metafields_bulk import router as bulk_metafields_router
+            app.include_router(bulk_metafields_router, prefix="/api/v1/metafields", tags=["metafields-bulk"])
+            logger.info("Bulk metafields router registered - High performance bulk operations enabled!")
+        except ImportError as e:
+            logger.warning(f"Bulk metafields router not available: {e}")
 
 # Register all routers
 register_routers()

@@ -1,0 +1,62 @@
+version: '3.8'
+
+services:
+  postgres:
+    image: postgres:14
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: activepieces
+      POSTGRES_USER: activepieces
+      POSTGRES_PASSWORD: activepieces
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U activepieces"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+
+  redis:
+    image: redis:7-alpine
+    restart: unless-stopped
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+
+  activepieces:
+    image: activepieces/activepieces:0.65.0
+    restart: unless-stopped
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    ports:
+      - "8080:80"
+    environment:
+      AP_ENGINE_EXECUTABLE_PATH: dist/packages/engine/main.js
+      AP_POSTGRES_DATABASE: activepieces
+      AP_POSTGRES_HOST: postgres
+      AP_POSTGRES_PORT: 5432
+      AP_POSTGRES_USERNAME: activepieces
+      AP_POSTGRES_PASSWORD: activepieces
+      AP_POSTGRES_SSL_CA: 
+      AP_REDIS_HOST: redis
+      AP_REDIS_PORT: 6379
+      AP_ENVIRONMENT: production
+      AP_FRONTEND_URL: http://localhost:8080
+      AP_WEBHOOK_TIMEOUT_SECONDS: 30
+      AP_TRIGGER_DEFAULT_POLL_INTERVAL: 5
+      AP_ENCRYPTION_KEY: ${AP_ENCRYPTION_KEY:-activepieces-encryption-key-placeholder}
+      AP_JWT_SECRET: ${AP_JWT_SECRET:-activepieces-jwt-secret-placeholder}
+    volumes:
+      - activepieces_data:/app/dist/packages/server/assets
+
+volumes:
+  postgres_data:
+  redis_data:
+  activepieces_data:
