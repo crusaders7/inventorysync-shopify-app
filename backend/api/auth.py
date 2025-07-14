@@ -14,6 +14,7 @@ import secrets
 import hashlib
 import hmac
 import base64
+import json
 
 # Import our utilities
 from utils.validation import ShopDomainValidator, APIKeyValidator
@@ -33,36 +34,37 @@ async def dev_setup(shop: str = "inventorysync-dev.myshopify.com"):
     try:
         from sqlalchemy.orm import sessionmaker
         from database import engine
-        
+
         Session = sessionmaker(bind=engine)
         session = Session()
-        
-        # Check if store already exists
-        existing_store = session.query(Store).filter(Store.shopify_domain == shop).first()
-        if existing_store:
+
+        try:
+            # Check if store already exists
+            existing_store = session.query(Store).filter(Store.shopify_domain == shop).first()
+            if existing_store:
+                return {"message": "Store already exists", "shop": shop}
+
+            # Create a mock store entry for development
+            new_store = Store(
+                shopify_domain=shop,
+                shop_name="InventorySync Dev Store",
+                access_token=os.getenv("DEV_ACCESS_TOKEN", "dev_token_123"),  # Mock token for development
+                email="dev@inventorysync.com"
+            )
+
+            session.add(new_store)
+            session.commit()
+
+            logger.info(f"Dev store created: {shop}")
+
+            return {
+                "message": "Development store created successfully",
+                "shop": shop,
+                "redirect": f"{settings.frontend_url}/?authenticated=true"
+            }
+        finally:
             session.close()
-            return {"message": "Store already exists", "shop": shop}
-        
-        # Create a mock store entry for development
-        new_store = Store(
-            shopify_store_id="12345",  # Mock store ID
-            shop_domain=shop,
-            store_name="InventorySync Dev Store",
-            access_token=os.getenv("DEV_ACCESS_TOKEN", "dev_token_123")  # Mock token for development
-        )
-        
-        session.add(new_store)
-        session.commit()
-        session.close()
-        
-        logger.info(f"Dev store created: {shop}")
-        
-        return {
-            "message": "Development store created successfully", 
-            "shop": shop,
-            "redirect": f"{settings.frontend_url}/?authenticated=true"
-        }
-        
+
     except Exception as e:
         logger.error(f"Dev setup failed: {e}")
         raise HTTPException(status_code=500, detail=f"Setup failed: {str(e)}")
@@ -126,11 +128,7 @@ async def install_app(
         
         # Log installation attempt
         logger.info(
-            f"Shop installation initiated",
-            shop_domain=shop_domain,
-            client_ip=request.client.host if request and request.client else None,
-            state=state[:8] + "...",  # Log partial state for debugging
-            scopes=scopes
+            f"Shop installation initiated for {shop_domain} from IP: {request.client.host if request and request.client else 'Unknown'}, state: {state[:8]}..., scopes: {scopes}"
         )
         
         # In production, store state in Redis with expiration
@@ -139,10 +137,10 @@ async def install_app(
         return RedirectResponse(url=auth_url)
         
     except ValueError as e:
-        logger.warning(f"Validation error in install: {e}", shop=shop)
+        logger.warning(f"Validation error in install: {e} for shop: {shop}")
         raise validation_error(str(e))
     except Exception as e:
-        logger.error(f"Install error: {str(e)}", shop=shop, exc_info=e)
+        logger.error(f"Install error for shop {shop}: {str(e)}", exc_info=True)
         raise HTTPException(status_code=500, detail="Installation failed")
 
 
@@ -165,7 +163,7 @@ async def auth_callback(
         
         # Verify state parameter (CSRF protection)
         if not state:
-            logger.warning(f"Missing state parameter in callback", shop=shop_domain)
+            logger.warning(f"Missing state parameter in callback for shop: {shop_domain}")
             raise unauthorized_error("Invalid request - missing state parameter")
         
         # In production, verify state from Redis
@@ -177,14 +175,11 @@ async def auth_callback(
         if hmac and settings.shopify_api_secret:
             query_params = dict(request.query_params)
             if not verify_shopify_hmac(query_params, settings.shopify_api_secret):
-                logger.warning(f"HMAC verification failed", shop=shop_domain)
+                logger.warning(f"HMAC verification failed for shop: {shop_domain}")
                 raise unauthorized_error("Request verification failed")
         
         logger.info(
-            f"Processing OAuth callback",
-            shop_domain=shop_domain,
-            state=state[:8] + "...",
-            has_hmac=bool(hmac)
+            f"Processing OAuth callback for {shop_domain}, state: {state[:8]}..., has_hmac: {bool(hmac)}"
         )
         
         # Exchange code for access token
@@ -193,7 +188,7 @@ async def auth_callback(
         auth = ShopifyAuth()
         access_token = await auth.exchange_code_for_token(shop_domain, code)
         
-        logger.info(f"Successfully obtained access token", shop_domain=shop_domain)
+        logger.info(f"Successfully obtained access token for shop: {shop_domain}")
         
         # Get shop and location info from Shopify
         client = ShopifyClient(shop_domain, access_token)
@@ -217,15 +212,15 @@ async def auth_callback(
                     existing_store.currency = shop_info.get("shop", {}).get("currency", "USD")
                     existing_store.timezone = shop_info.get("shop", {}).get("iana_timezone", "UTC")
                     
-                    logger.info(f"Updated existing store", shop_domain=shop_domain)
+                    logger.info(f"Updated existing store: {shop_domain}")
                     store = existing_store
                 else:
                     # Create new store
                     shop_data = shop_info.get("shop", {})
                     store = Store(
-                        shopify_store_id=str(shop_data.get("id", "unknown")),
-                        shop_domain=shop_domain,
-                        store_name=shop_data.get("name", shop_domain),
+                        shopify_domain=shop_domain,
+                        shop_name=shop_data.get("name", shop_domain),
+                        email=shop_data.get("email", ""),
                         currency=shop_data.get("currency", "USD"),
                         timezone=shop_data.get("iana_timezone", "UTC"),
                         subscription_plan="starter",
@@ -235,7 +230,7 @@ async def auth_callback(
                     session.add(store)
                     await session.flush()  # Get the store.id
                     
-                    logger.info(f"Created new store", shop_domain=shop_domain)
+                    logger.info(f"Created new store: {shop_domain}")
                 
                 # Create/update locations
                 for location_data in locations_info.get("locations", []):
@@ -267,10 +262,7 @@ async def auth_callback(
                 
                 # Log successful authentication
                 logger.info(
-                    f"Authentication completed successfully",
-                    shop_domain=shop_domain,
-                    store_id=store.id,
-                    locations_count=len(locations_info.get("locations", []))
+                    f"Authentication completed successfully for {shop_domain}, store_id: {store.id}, locations: {len(locations_info.get('locations', []))}"
                 )
                 
             except Exception as e:
@@ -292,13 +284,13 @@ async def auth_callback(
             return RedirectResponse(url=dashboard_url)
         
     except ValueError as e:
-        logger.warning(f"Validation error in callback: {e}", shop=shop)
+        logger.warning(f"Validation error in callback: {e} for shop: {shop}")
         error_url = f"{settings.frontend_url if hasattr(settings, 'frontend_url') else 'http://localhost:3000'}/?error=validation_failed"
         return RedirectResponse(url=error_url)
     except HTTPException:
         raise
     except Exception as e:
-        logger.error(f"Callback error: {str(e)}", shop=shop, exc_info=e)
+        logger.error(f"Callback error for shop {shop}: {str(e)}", exc_info=True)
         error_url = f"{settings.frontend_url if hasattr(settings, 'frontend_url') else 'http://localhost:3000'}/?error=authentication_failed"
         return RedirectResponse(url=error_url)
 
@@ -365,11 +357,11 @@ async def auth_status():
                 status["api_key_valid"] = False
                 status["configured"] = False
         
-        logger.info("Auth status check completed", **status)
+        logger.info(f"Auth status check completed: {status}")
         return status
         
     except Exception as e:
-        logger.error(f"Auth status check failed: {e}", exc_info=e)
+        logger.error(f"Auth status check failed: {e}", exc_info=True)
         return {
             "configured": False,
             "error": "Status check failed",
@@ -412,21 +404,15 @@ async def shopify_webhook(
             
             if not hmac.compare_digest(calculated_hmac, hmac_header):
                 logger.warning(
-                    f"Webhook HMAC verification failed",
-                    shop_domain=shop_domain,
-                    topic=topic
+                    f"Webhook HMAC verification failed for shop: {shop_domain}, topic: {topic}"
                 )
                 raise HTTPException(status_code=401, detail="Unauthorized")
         
         # Parse webhook data
-        import json
         webhook_data = json.loads(body.decode('utf-8'))
         
         logger.info(
-            f"Received webhook",
-            shop_domain=shop_domain,
-            topic=topic,
-            webhook_id=webhook_data.get('id')
+            f"Received webhook for shop: {shop_domain}, topic: {topic}, webhook_id: {webhook_data.get('id')}"
         )
         
         # Process webhook based on topic
@@ -456,32 +442,32 @@ async def shopify_webhook(
         logger.error("Invalid JSON in webhook payload")
         raise HTTPException(status_code=400, detail="Invalid JSON payload")
     except Exception as e:
-        logger.error(f"Webhook processing failed: {e}", exc_info=e)
+        logger.error(f"Webhook processing failed: {e}", exc_info=True)
         raise HTTPException(status_code=500, detail="Webhook processing failed")
 
 
 # Webhook handlers
 async def handle_product_created(shop_domain: str, product_data: dict):
     """Handle product creation webhook"""
-    logger.info(f"Product created", shop_domain=shop_domain, product_id=product_data.get('id'))
+    logger.info(f"Product created for shop: {shop_domain}, product_id: {product_data.get('id')}")
     # TODO: Sync new product to local database
 
 
 async def handle_product_updated(shop_domain: str, product_data: dict):
     """Handle product update webhook"""
-    logger.info(f"Product updated", shop_domain=shop_domain, product_id=product_data.get('id'))
+    logger.info(f"Product updated for shop: {shop_domain}, product_id: {product_data.get('id')}")
     # TODO: Update product in local database
 
 
 async def handle_inventory_updated(shop_domain: str, inventory_data: dict):
     """Handle inventory level update webhook"""
-    logger.info(f"Inventory updated", shop_domain=shop_domain, inventory_item_id=inventory_data.get('inventory_item_id'))
+    logger.info(f"Inventory updated for shop: {shop_domain}, inventory_item_id: {inventory_data.get('inventory_item_id')}")
     # TODO: Update inventory in local database
 
 
 async def handle_app_uninstalled(shop_domain: str, uninstall_data: dict):
     """Handle app uninstallation webhook"""
-    logger.warning(f"App uninstalled", shop_domain=shop_domain)
+    logger.warning(f"App uninstalled for shop: {shop_domain}")
     
     try:
         async with AsyncSessionLocal() as session:
@@ -494,10 +480,10 @@ async def handle_app_uninstalled(shop_domain: str, uninstall_data: dict):
             if store:
                 store.subscription_status = "cancelled"
                 await session.commit()
-                logger.info(f"Store marked as uninstalled", shop_domain=shop_domain)
+                logger.info(f"Store marked as uninstalled: {shop_domain}")
                 
     except Exception as e:
-        logger.error(f"Failed to handle app uninstall: {e}", shop_domain=shop_domain)
+        logger.error(f"Failed to handle app uninstall for {shop_domain}: {e}")
 
 
 async def handle_customer_data_request(shop_domain: str, request_data: dict):
@@ -506,10 +492,7 @@ async def handle_customer_data_request(shop_domain: str, request_data: dict):
     customer_email = request_data.get("customer", {}).get("email")
     
     logger.info(
-        f"Customer data request received",
-        shop_domain=shop_domain,
-        customer_id=customer_id,
-        customer_email=customer_email
+        f"Customer data request received for shop: {shop_domain}, customer_id: {customer_id}, email: {customer_email}"
     )
     
     # TODO: Implement customer data export
@@ -525,10 +508,7 @@ async def handle_customer_redact(shop_domain: str, redact_data: dict):
     customer_email = redact_data.get("customer", {}).get("email")
     
     logger.info(
-        f"Customer redaction request received",
-        shop_domain=shop_domain,
-        customer_id=customer_id,
-        customer_email=customer_email
+        f"Customer redaction request received for shop: {shop_domain}, customer_id: {customer_id}, email: {customer_email}"
     )
     
     # TODO: Implement customer data deletion
@@ -543,9 +523,7 @@ async def handle_shop_redact(shop_domain: str, redact_data: dict):
     shop_id = redact_data.get("shop_id")
     
     logger.info(
-        f"Shop redaction request received",
-        shop_domain=shop_domain,
-        shop_id=shop_id
+        f"Shop redaction request received for shop: {shop_domain}, shop_id: {shop_id}"
     )
     
     try:
@@ -562,10 +540,10 @@ async def handle_shop_redact(shop_domain: str, redact_data: dict):
                 store.deletion_scheduled_at = datetime.now() + timedelta(hours=48)
                 await session.commit()
                 
-                logger.info(f"Shop marked for deletion", shop_domain=shop_domain)
+                logger.info(f"Shop marked for deletion: {shop_domain}")
                 
     except Exception as e:
-        logger.error(f"Failed to handle shop redact: {e}", shop_domain=shop_domain)
+        logger.error(f"Failed to handle shop redact for {shop_domain}: {e}")
 
 
 async def setup_mandatory_webhooks(shop_domain: str, access_token: str):
@@ -622,27 +600,20 @@ async def setup_mandatory_webhooks(shop_domain: str, access_token: str):
                 if response.status_code == 201:
                     webhook_data = response.json()
                     logger.info(
-                        f"Created webhook: {webhook_config['webhook']['topic']}",
-                        shop_domain=shop_domain,
-                        webhook_id=webhook_data["webhook"]["id"]
+                        f"Created webhook: {webhook_config['webhook']['topic']} for shop: {shop_domain}, webhook_id: {webhook_data['webhook']['id']}"
                     )
                 elif response.status_code == 422:
                     # Webhook might already exist
                     logger.info(
-                        f"Webhook already exists: {webhook_config['webhook']['topic']}",
-                        shop_domain=shop_domain
+                        f"Webhook already exists: {webhook_config['webhook']['topic']} for shop: {shop_domain}"
                     )
                 else:
                     logger.warning(
-                        f"Failed to create webhook: {webhook_config['webhook']['topic']}",
-                        shop_domain=shop_domain,
-                        status_code=response.status_code,
-                        response=response.text
+                        f"Failed to create webhook: {webhook_config['webhook']['topic']} for shop: {shop_domain}, status: {response.status_code}, response: {response.text}"
                     )
                     
         except Exception as e:
             logger.error(
-                f"Error creating webhook: {webhook_config['webhook']['topic']}",
-                shop_domain=shop_domain,
-                exc_info=e
+                f"Error creating webhook: {webhook_config['webhook']['topic']} for shop: {shop_domain}",
+                exc_info=True
             )

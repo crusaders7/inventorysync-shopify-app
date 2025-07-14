@@ -1,0 +1,36 @@
+version: '3.8'
+
+services:
+  app:
+    build: .
+    container_name: inventorysync-${ENVIRONMENT:-staging}
+    ports:
+      - "3000:3000"
+    environment:
+      - NODE_ENV=${ENVIRONMENT:-staging}
+      - DATABASE_URL=${DATABASE_URL}
+      - MCP_SERVER_URL=http://mcp-server:8080
+    volumes:
+      - ./logs:/app/logs
+      - ./data:/app/data
+    restart: unless-stopped
+    networks:
+      - app-network
+    depends_on:
+      - mcp-server
+
+  mcp-server:
+    image: mcp/server:latest
+    container_name: mcp-server
+    ports:
+      - "8080:8080"
+    environment:
+      - MCP_AUTH_TOKEN=${MCP_AUTH_TOKEN}
+    volumes:
+      - ./mcp-config:/config
+    networks:
+      - app-network
+
+networks:
+  app-network:
+    driver: bridge
