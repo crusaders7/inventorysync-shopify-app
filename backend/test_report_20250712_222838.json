@@ -1,0 +1,304 @@
+[
+  {
+    "endpoint": "GET /",
+    "status_code": 200,
+    "expected_status": 200,
+    "success": true,
+    "response": {
+      "message": "InventorySync Shopify App API",
+      "version": "1.0.0",
+      "status": "healthy",
+      "docs": "/docs",
+      "redoc": "/redoc"
+    },
+    "error": null
+  },
+  {
+    "endpoint": "GET /health",
+    "status_code": 200,
+    "expected_status": 200,
+    "success": true,
+    "response": {
+      "status": "healthy",
+      "service": "inventorysync-shopify-app",
+      "version": "1.0.0"
+    },
+    "error": null
+  },
+  {
+    "endpoint": "GET /api",
+    "status_code": 200,
+    "expected_status": 200,
+    "success": true,
+    "response": {
+      "message": "InventorySync API",
+      "version": "1.0.0",
+      "endpoints": {
+        "health": "/health",
+        "auth": "/api/auth",
+        "inventory": "/api/inventory",
+        "locations": "/api/locations",
+        "alerts": "/api/alerts",
+        "webhooks": "/api/webhooks",
+        "reports": "/api/reports",
+        "forecasting": "/api/forecasting",
+        "workflows": "/api/workflows",
+        "monitoring": "/api/monitoring",
+        "dashboard": "/api/dashboard",
+        "billing": "/api/billing"
+      }
+    },
+    "error": null
+  },
+  {
+    "endpoint": "GET /api/auth/install?shop=test-shop.myshopify.com",
+    "status_code": 307,
+    "expected_status": 307,
+    "success": true,
+    "response": null,
+    "error": null
+  },
+  {
+    "endpoint": "GET /api/auth/callback",
+    "status_code": 422,
+    "expected_status": 422,
+    "success": true,
+    "response": {
+      "detail": "Missing required parameters"
+    },
+    "error": null
+  },
+  {
+    "endpoint": "GET /api/inventory/items",
+    "status_code": 200,
+    "expected_status": 200,
+    "success": true,
+    "response": {
+      "items": [
+        {
+          "id": "1",
+          "product_name": "Test Product",
+          "sku": "TEST-001",
+          "current_stock": 100,
+          "location": "Warehouse A"
+        }
+      ],
+      "total": 1
+    },
+    "error": null
+  },
+  {
+    "endpoint": "GET /api/inventory/levels",
+    "status_code": 200,
+    "expected_status": 200,
+    "success": true,
+    "response": {
+      "levels": [
+        {
+          "product_id": "1",
+          "location_id": "loc1",
+          "available": 100,
+          "reserved": 0
+        }
+      ]
+    },
+    "error": null
+  },
+  {
+    "endpoint": "POST /api/inventory/sync",
+    "status_code": 200,
+    "expected_status": 200,
+    "success": true,
+    "response": {
+      "status": "success",
+      "synced_items": 0,
+      "message": "Inventory sync completed"
+    },
+    "error": null
+  },
+  {
+    "endpoint": "GET /api/inventory/history",
+    "status_code": 200,
+    "expected_status": 200,
+    "success": true,
+    "response": {
+      "movements": [],
+      "total": 0
+    },
+    "error": null
+  },
+  {
+    "endpoint": "GET /api/locations",
+    "status_code": 307,
+    "expected_status": 200,
+    "success": false,
+    "response": null,
+    "error": null
+  },
+  {
+    "endpoint": "POST /api/locations",
+    "status_code": 307,
+    "expected_status": 200,
+    "success": false,
+    "response": null,
+    "error": null
+  },
+  {
+    "endpoint": "GET /api/alerts",
+    "status_code": 307,
+    "expected_status": 200,
+    "success": false,
+    "response": null,
+    "error": null
+  },
+  {
+    "endpoint": "POST /api/alerts",
+    "status_code": 307,
+    "expected_status": 200,
+    "success": false,
+    "response": null,
+    "error": null
+  },
+  {
+    "endpoint": "GET /api/webhooks",
+    "status_code": 307,
+    "expected_status": 200,
+    "success": false,
+    "response": null,
+    "error": null
+  },
+  {
+    "endpoint": "POST /api/webhooks/register",
+    "status_code": 200,
+    "expected_status": 200,
+    "success": true,
+    "response": {
+      "id": "2",
+      "topic": "inventory_levels/update",
+      "address": "https://example.com/webhook",
+      "message": "Webhook registered successfully"
+    },
+    "error": null
+  },
+  {
+    "endpoint": "GET /api/reports/inventory-summary",
+    "status_code": 200,
+    "expected_status": 200,
+    "success": true,
+    "response": {
+      "total_products": 10,
+      "total_stock": 1000,
+      "low_stock_items": 2,
+      "out_of_stock_items": 1,
+      "overstock_items": 1
+    },
+    "error": null
+  },
+  {
+    "endpoint": "GET /api/reports/movement-history",
+    "status_code": 200,
+    "expected_status": 200,
+    "success": true,
+    "response": {
+      "movements": [],
+      "total": 0
+    },
+    "error": null
+  },
+  {
+    "endpoint": "GET /api/reports/low-stock",
+    "status_code": 200,
+    "expected_status": 200,
+    "success": true,
+    "response": {
+      "items": [
+        {
+          "id": "1",
+          "name": "Product A",
+          "current_stock": 5,
+          "reorder_point": 10
+        }
+      ],
+      "total": 1
+    },
+    "error": null
+  },
+  {
+    "endpoint": "GET /api/forecasting/demand",
+    "status_code": 200,
+    "expected_status": 200,
+    "success": true,
+    "response": {
+      "forecasts": [
+        {
+          "product_id": "1",
+          "predicted_demand": 100,
+          "period": "next_30_days"
+        }
+      ],
+      "total": 1
+    },
+    "error": null
+  },
+  {
+    "endpoint": "POST /api/forecasting/generate",
+    "status_code": 200,
+    "expected_status": 200,
+    "success": true,
+    "response": {
+      "status": "success",
+      "message": "Forecast generated successfully",
+      "forecast_id": "new_forecast_123"
+    },
+    "error": null
+  },
+  {
+    "endpoint": "GET /api/workflows",
+    "status_code": 307,
+    "expected_status": 200,
+    "success": false,
+    "response": null,
+    "error": null
+  },
+  {
+    "endpoint": "POST /api/workflows",
+    "status_code": 307,
+    "expected_status": 200,
+    "success": false,
+    "response": null,
+    "error": null
+  },
+  {
+    "endpoint": "POST /api/webhooks/customers/data_request",
+    "status_code": 200,
+    "expected_status": 200,
+    "success": true,
+    "response": {
+      "status": "success",
+      "message": "Customer data request processed"
+    },
+    "error": null
+  },
+  {
+    "endpoint": "POST /api/webhooks/customers/redact",
+    "status_code": 200,
+    "expected_status": 200,
+    "success": true,
+    "response": {
+      "status": "success",
+      "message": "Customer data redacted"
+    },
+    "error": null
+  },
+  {
+    "endpoint": "POST /api/webhooks/shop/redact",
+    "status_code": 200,
+    "expected_status": 200,
+    "success": true,
+    "response": {
+      "status": "success",
+      "message": "Shop data redacted"
+    },
+    "error": null
+  }
+]

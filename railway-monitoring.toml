@@ -1,0 +1,43 @@
+[build]
+builder = "nixpacks"
+
+[[services]]
+name = "prometheus"
+source = "."
+buildCommand = ""
+startCommand = "prometheus --config.file=/app/monitoring/prometheus.yml --storage.tsdb.path=/prometheus"
+port = 9090
+healthcheckPath = "/-/healthy"
+[services.deploy]
+numReplicas = 1
+[services.volumes]
+"/prometheus" = { size = "10Gi" }
+
+[[services]]
+name = "alertmanager"
+source = "."
+buildCommand = ""
+startCommand = "alertmanager --config.file=/app/monitoring/alertmanager.yml --storage.path=/alertmanager"
+port = 9093
+healthcheckPath = "/-/healthy"
+[services.deploy]
+numReplicas = 1
+[services.volumes]
+"/alertmanager" = { size = "1Gi" }
+[services.env]
+SLACK_API_URL = { value = "$SLACK_API_URL" }
+
+[[services]]
+name = "grafana"
+source = "."
+buildCommand = ""
+startCommand = "grafana-server --homepath=/usr/share/grafana --config=/etc/grafana/grafana.ini"
+port = 3000
+healthcheckPath = "/api/health"
+[services.deploy]
+numReplicas = 1
+[services.volumes]
+"/var/lib/grafana" = { size = "5Gi" }
+[services.env]
+GF_SECURITY_ADMIN_USER = { value = "admin" }
+GF_SECURITY_ADMIN_PASSWORD = { value = "$GRAFANA_PASSWORD" }

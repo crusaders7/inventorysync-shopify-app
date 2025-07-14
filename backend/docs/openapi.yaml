@@ -1,0 +1,961 @@
+openapi: 3.0.3
+info:
+  title: InventorySync API
+  description: |
+    Enterprise-level inventory management API for Shopify stores at startup-friendly prices.
+    
+    ## Features
+    - 🎯 **Custom Fields**: Unlimited custom fields with JSONB storage
+    - 🤖 **Workflow Automation**: Event-driven rules engine  
+    - 📊 **Advanced Reporting**: Build reports on any field
+    - 🚨 **Smart Alerts**: Template-based alerts with analytics
+    - 🔗 **Integrations**: Full REST API for third-party systems
+    
+    ## Authentication
+    All endpoints require either Shopify session authentication or API key authentication via `X-API-Key` header.
+  version: 1.0.0
+  contact:
+    name: InventorySync API Support
+    email: api-support@inventorysync.com
+  license:
+    name: MIT
+    url: https://opensource.org/licenses/MIT
+
+servers:
+  - url: https://api.inventorysync.com/api
+    description: Production server
+  - url: https://staging-api.inventorysync.com/api  
+    description: Staging server
+
+security:
+  - ApiKeyAuth: []
+  - ShopifySession: []
+
+paths:
+  /custom-fields/{shop_domain}:
+    get:
+      summary: Get custom fields
+      description: Retrieve all custom field definitions for a store
+      tags:
+        - Custom Fields
+      parameters:
+        - name: shop_domain
+          in: path
+          required: true
+          schema:
+            type: string
+          example: "test-store.myshopify.com"
+        - name: entity_type
+          in: query
+          schema:
+            type: string
+            enum: [product, variant, inventory_item, supplier]
+          example: "product"
+        - name: include_inactive
+          in: query
+          schema:
+            type: boolean
+            default: false
+      responses:
+        '200':
+          description: Custom fields retrieved successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  fields:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/CustomField'
+                  total_count:
+                    type: integer
+              example:
+                fields:
+                  - id: 123
+                    field_name: "season"
+                    display_name: "Product Season"
+                    field_type: "select"
+                    target_entity: "product"
+                    validation_rules:
+                      options: ["Spring", "Summer", "Fall", "Winter"]
+                    usage_count: 45
+                    created_at: "2024-01-15T10:30:00Z"
+                total_count: 1
+
+    post:
+      summary: Create custom field
+      description: Create a new custom field definition
+      tags:
+        - Custom Fields
+      parameters:
+        - name: shop_domain
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CustomFieldCreate'
+            example:
+              field_name: "material_type"
+              display_name: "Material Type"
+              field_type: "select"
+              target_entity: "product"
+              validation_rules:
+                options: ["Cotton", "Polyester", "Wool", "Silk"]
+              is_required: false
+              industry_template: "fashion"
+      responses:
+        '201':
+          description: Custom field created successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CustomField'
+
+  /custom-fields/{shop_domain}/templates/{template_name}:
+    post:
+      summary: Apply industry template
+      description: Apply pre-built custom field templates for specific industries
+      tags:
+        - Custom Fields
+      parameters:
+        - name: shop_domain
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: template_name
+          in: path
+          required: true
+          schema:
+            type: string
+            enum: [fashion, food, electronics, B2B]
+          example: "fashion"
+      responses:
+        '200':
+          description: Template applied successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  template:
+                    type: string
+                  fields_created:
+                    type: integer
+                  message:
+                    type: string
+                  fields:
+                    type: array
+                    items:
+                      type: object
+
+  /alerts/{shop_domain}:
+    get:
+      summary: Get alerts
+      description: Retrieve alerts with advanced filtering and pagination
+      tags:
+        - Alerts
+      parameters:
+        - name: shop_domain
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: status
+          in: query
+          schema:
+            type: string
+            enum: [active, acknowledged, resolved, all]
+        - name: severity
+          in: query
+          schema:
+            type: string
+            enum: [low, medium, high, critical]
+        - name: alert_type
+          in: query
+          schema:
+            type: string
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 200
+            default: 50
+        - name: sort_by
+          in: query
+          schema:
+            type: string
+            enum: [created_at, severity, alert_type, title]
+            default: "created_at"
+      responses:
+        '200':
+          description: Alerts retrieved successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  alerts:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Alert'
+                  total_count:
+                    type: integer
+                  has_more:
+                    type: boolean
+
+    post:
+      summary: Create alert
+      description: Create a new alert with custom data and auto-resolution
+      tags:
+        - Alerts
+      parameters:
+        - name: shop_domain
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AlertCreate'
+      responses:
+        '201':
+          description: Alert created successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  id:
+                    type: integer
+                  alert_type:
+                    type: string
+                  severity:
+                    type: string
+                  title:
+                    type: string
+                  message:
+                    type: string
+
+  /alerts/analytics/{shop_domain}:
+    get:
+      summary: Get alert analytics
+      description: Retrieve alert metrics and breakdowns for analytics dashboard
+      tags:
+        - Alerts
+      parameters:
+        - name: shop_domain
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: days
+          in: query
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 365
+            default: 30
+      responses:
+        '200':
+          description: Alert analytics retrieved successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AlertAnalytics'
+
+  /workflows/rules/{shop_domain}:
+    get:
+      summary: Get workflow rules
+      description: Retrieve all workflow automation rules
+      tags:
+        - Workflows
+      parameters:
+        - name: shop_domain
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: is_active
+          in: query
+          schema:
+            type: boolean
+        - name: include_stats
+          in: query
+          schema:
+            type: boolean
+            default: true
+      responses:
+        '200':
+          description: Workflow rules retrieved successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  rules:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/WorkflowRule'
+                  total_count:
+                    type: integer
+
+    post:
+      summary: Create workflow rule
+      description: Create a new automation rule with triggers and actions
+      tags:
+        - Workflows
+      parameters:
+        - name: shop_domain
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/WorkflowRuleCreate'
+      responses:
+        '201':
+          description: Workflow rule created successfully
+
+  /workflows/rules/{rule_id}/test:
+    post:
+      summary: Test workflow rule
+      description: Test a workflow rule with sample data to verify conditions
+      tags:
+        - Workflows
+      parameters:
+        - name: rule_id
+          in: path
+          required: true
+          schema:
+            type: integer
+        - name: shop_domain
+          in: query
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: true
+              example:
+                current_stock: 5
+                reorder_point: 10
+                sku: "TEST-SKU-001"
+      responses:
+        '200':
+          description: Workflow rule test completed
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  rule_name:
+                    type: string
+                  conditions_met:
+                    type: boolean
+                  would_execute:
+                    type: boolean
+                  test_data:
+                    type: object
+
+  /reports/{shop_domain}/build:
+    post:
+      summary: Build custom report
+      description: Generate a custom report with advanced aggregations and filtering
+      tags:
+        - Reports
+      parameters:
+        - name: shop_domain
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: export_format
+          in: query
+          schema:
+            type: string
+            enum: [json, csv, excel]
+            default: "json"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ReportDefinition'
+      responses:
+        '200':
+          description: Report generated successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ReportResult'
+            text/csv:
+              schema:
+                type: string
+                format: binary
+
+  /reports/{shop_domain}/fields/{entity_type}:
+    get:
+      summary: Get available fields
+      description: Get all available fields for reporting on an entity type
+      tags:
+        - Reports
+      parameters:
+        - name: shop_domain
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: entity_type
+          in: path
+          required: true
+          schema:
+            type: string
+            enum: [product, variant, inventory, alert]
+      responses:
+        '200':
+          description: Available fields retrieved successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  entity_type:
+                    type: string
+                  standard_fields:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/FieldDefinition'
+                  custom_fields:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/FieldDefinition'
+                  total_fields:
+                    type: integer
+
+  /integrations/{shop_domain}/api-keys:
+    post:
+      summary: Create API key
+      description: Generate a new API key for third-party integrations
+      tags:
+        - Integrations
+      parameters:
+        - name: shop_domain
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/APIKeyCreate'
+      responses:
+        '201':
+          description: API key created successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  api_key:
+                    type: string
+                    example: "isk_AbCdEf123456789"
+                  api_secret:
+                    type: string
+                    example: "secret_XyZ987654321"
+                  name:
+                    type: string
+                  permissions:
+                    type: array
+                    items:
+                      type: string
+                  warning:
+                    type: string
+                    example: "Store this API key securely. It will not be shown again."
+
+  /integrations/{shop_domain}/sync:
+    post:
+      summary: Sync external data
+      description: Sync data from external systems into InventorySync
+      tags:
+        - Integrations
+      security:
+        - ApiKeyAuth: []
+      parameters:
+        - name: shop_domain
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ExternalDataSync'
+      responses:
+        '200':
+          description: Data synced successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: "success"
+                  entity_type:
+                    type: string
+                  external_id:
+                    type: string
+                  synced_at:
+                    type: string
+                    format: date-time
+
+components:
+  securitySchemes:
+    ApiKeyAuth:
+      type: apiKey
+      in: header
+      name: X-API-Key
+    ShopifySession:
+      type: oauth2
+      flows:
+        authorizationCode:
+          authorizationUrl: https://shopify.dev/oauth/authorize
+          tokenUrl: https://shopify.dev/oauth/token
+          scopes:
+            read_products: Read products
+            write_products: Write products
+            read_inventory: Read inventory
+            write_inventory: Write inventory
+
+  schemas:
+    CustomField:
+      type: object
+      properties:
+        id:
+          type: integer
+          example: 123
+        field_name:
+          type: string
+          example: "season"
+        display_name:
+          type: string
+          example: "Product Season"
+        field_type:
+          type: string
+          enum: [text, number, date, boolean, select, multi_select, url, email]
+          example: "select"
+        target_entity:
+          type: string
+          enum: [product, variant, inventory_item, supplier]
+          example: "product"
+        validation_rules:
+          type: object
+          example:
+            options: ["Spring", "Summer", "Fall", "Winter"]
+        is_required:
+          type: boolean
+          example: false
+        is_active:
+          type: boolean
+          example: true
+        usage_count:
+          type: integer
+          example: 45
+        created_at:
+          type: string
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time
+
+    CustomFieldCreate:
+      type: object
+      required:
+        - field_name
+        - display_name
+        - field_type
+        - target_entity
+      properties:
+        field_name:
+          type: string
+          pattern: "^[a-z_][a-z0-9_]*$"
+          example: "material_type"
+        display_name:
+          type: string
+          example: "Material Type"
+        field_type:
+          type: string
+          enum: [text, number, date, boolean, select, multi_select, url, email]
+        target_entity:
+          type: string
+          enum: [product, variant, inventory_item, supplier]
+        validation_rules:
+          type: object
+        is_required:
+          type: boolean
+          default: false
+        industry_template:
+          type: string
+          enum: [fashion, food, electronics, B2B]
+
+    Alert:
+      type: object
+      properties:
+        id:
+          type: integer
+        alert_type:
+          type: string
+          enum: [low_stock, overstock, reorder, compliance, workflow, custom, manual]
+        severity:
+          type: string
+          enum: [low, medium, high, critical]
+        title:
+          type: string
+        message:
+          type: string
+        product_sku:
+          type: string
+        current_stock:
+          type: integer
+        is_acknowledged:
+          type: boolean
+        is_resolved:
+          type: boolean
+        auto_resolve_at:
+          type: string
+          format: date-time
+        created_at:
+          type: string
+          format: date-time
+
+    AlertCreate:
+      type: object
+      required:
+        - alert_type
+        - severity
+        - title
+        - message
+      properties:
+        alert_type:
+          type: string
+          enum: [low_stock, overstock, reorder, compliance, workflow, custom, manual]
+        severity:
+          type: string
+          enum: [low, medium, high, critical]
+        title:
+          type: string
+          maxLength: 200
+        message:
+          type: string
+          maxLength: 2000
+        product_sku:
+          type: string
+        location_name:
+          type: string
+        current_stock:
+          type: integer
+        recommended_action:
+          type: string
+        notification_channels:
+          type: array
+          items:
+            type: string
+            enum: [email, webhook, sms]
+        auto_resolve_hours:
+          type: integer
+          minimum: 1
+
+    AlertAnalytics:
+      type: object
+      properties:
+        period_days:
+          type: integer
+        summary:
+          type: object
+          properties:
+            total_alerts:
+              type: integer
+            resolved_alerts:
+              type: integer
+            active_alerts:
+              type: integer
+            resolution_rate:
+              type: number
+              format: float
+        breakdown:
+          type: object
+          properties:
+            by_type:
+              type: array
+              items:
+                type: object
+                properties:
+                  alert_type:
+                    type: string
+                  count:
+                    type: integer
+            by_severity:
+              type: array
+              items:
+                type: object
+                properties:
+                  severity:
+                    type: string
+                  count:
+                    type: integer
+
+    WorkflowRule:
+      type: object
+      properties:
+        id:
+          type: integer
+        rule_name:
+          type: string
+        description:
+          type: string
+        trigger_event:
+          type: string
+          enum: [inventory_low, custom_field_change, product_created, variant_low_stock, daily_schedule, manual]
+        trigger_conditions:
+          type: object
+        actions:
+          type: array
+          items:
+            type: object
+        is_active:
+          type: boolean
+        execution_count:
+          type: integer
+        last_executed_at:
+          type: string
+          format: date-time
+
+    WorkflowRuleCreate:
+      type: object
+      required:
+        - rule_name
+        - trigger_event
+        - actions
+      properties:
+        rule_name:
+          type: string
+          maxLength: 100
+        description:
+          type: string
+        trigger_event:
+          type: string
+          enum: [inventory_low, custom_field_change, product_created, variant_low_stock, daily_schedule, manual]
+        trigger_conditions:
+          type: object
+        actions:
+          type: array
+          minItems: 1
+          items:
+            type: object
+        priority:
+          type: integer
+          minimum: 1
+          maximum: 1000
+          default: 100
+        max_executions_per_hour:
+          type: integer
+          minimum: 0
+          maximum: 3600
+          default: 60
+        is_active:
+          type: boolean
+          default: true
+
+    ReportDefinition:
+      type: object
+      required:
+        - name
+        - entity_type
+        - metrics
+      properties:
+        name:
+          type: string
+          maxLength: 100
+        description:
+          type: string
+        entity_type:
+          type: string
+          enum: [product, variant, inventory, alert]
+        metrics:
+          type: array
+          minItems: 1
+          items:
+            type: object
+            properties:
+              field:
+                type: string
+              aggregation:
+                type: string
+                enum: [sum, avg, count, min, max, count_distinct]
+              label:
+                type: string
+        group_by:
+          type: array
+          items:
+            type: string
+            enum: [day, week, month, year, location, product_type, vendor, custom_field]
+        filters:
+          type: array
+          items:
+            type: object
+            properties:
+              field:
+                type: string
+              operator:
+                type: string
+                enum: [equals, not_equals, greater_than, less_than, contains, in, between]
+              value:
+                oneOf:
+                  - type: string
+                  - type: number
+                  - type: array
+        sort_by:
+          type: string
+        sort_order:
+          type: string
+          enum: [asc, desc]
+          default: "desc"
+        limit:
+          type: integer
+          minimum: 1
+          maximum: 10000
+          default: 1000
+
+    ReportResult:
+      type: object
+      properties:
+        report_name:
+          type: string
+        generated_at:
+          type: string
+          format: date-time
+        row_count:
+          type: integer
+        data:
+          type: array
+          items:
+            type: object
+        metadata:
+          type: object
+
+    FieldDefinition:
+      type: object
+      properties:
+        field:
+          type: string
+        label:
+          type: string
+        type:
+          type: string
+        category:
+          type: string
+          enum: [standard, custom]
+        aggregations:
+          type: array
+          items:
+            type: string
+
+    APIKeyCreate:
+      type: object
+      required:
+        - name
+        - permissions
+      properties:
+        name:
+          type: string
+          maxLength: 100
+        description:
+          type: string
+        permissions:
+          type: array
+          minItems: 1
+          items:
+            type: string
+            enum: [inventory:read, inventory:write, products:read, products:write, alerts:read, alerts:write]
+        expires_at:
+          type: string
+          format: date-time
+        rate_limit:
+          type: integer
+          minimum: 10
+          maximum: 10000
+          default: 1000
+
+    ExternalDataSync:
+      type: object
+      required:
+        - entity_type
+        - external_id
+        - data
+        - source_system
+      properties:
+        entity_type:
+          type: string
+          enum: [product, variant, inventory, supplier]
+        external_id:
+          type: string
+        data:
+          type: object
+        source_system:
+          type: string
+        sync_timestamp:
+          type: string
+          format: date-time
+
+    Error:
+      type: object
+      properties:
+        error:
+          type: string
+        details:
+          oneOf:
+            - type: string
+            - type: array
+              items:
+                type: object
+        type:
+          type: string
+          enum: [validation_error, authentication_error, authorization_error, not_found_error, rate_limit_error, plan_limit_error, internal_error]
+        timestamp:
+          type: string
+          format: date-time
+
+tags:
+  - name: Custom Fields
+    description: Dynamic custom field management with industry templates
+  - name: Alerts
+    description: Smart alerting system with templates and analytics
+  - name: Workflows
+    description: Event-driven automation rules and actions
+  - name: Reports
+    description: Custom report builder with advanced aggregations
+  - name: Integrations
+    description: Third-party system connections and data sync

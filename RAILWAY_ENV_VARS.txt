@@ -1,0 +1,47 @@
+# Railway Environment Variables
+# Copy these to your Railway dashboard
+
+# Shopify Credentials (get API secret from Partners Dashboard)
+SHOPIFY_API_KEY=b9e83419bf510cff0b85cf446b4a7750
+SHOPIFY_API_SECRET=YOUR_API_SECRET_FROM_PARTNERS_DASHBOARD
+SHOPIFY_WEBHOOK_SECRET=efb8bece25467cd4dc71d7648e808eae347ce3a172fa109ee35d9e63594f3be6
+
+# App URLs
+APP_URL=https://inventorysync.prestigecorp.au
+FRONTEND_URL=https://inventorysync.prestigecorp.au
+
+# Security Keys
+SECRET_KEY=0953c72eff528536e4a06e0a7af98b464580c1085bc774b3eff0ad8d658d43b9
+JWT_SECRET_KEY=cc44f1d27cf36cd7cbc405184fb2795124a08d745b005006656b9daa60873914
+ENCRYPTION_KEY=77d2d639814c06bea2cc1f9342a5034c1757e7e613f6dd2c38a9843fde068a75
+
+# Environment
+ENVIRONMENT=production
+DEBUG=false
+LOG_LEVEL=INFO
+
+# Features
+ENABLE_MULTI_LOCATION=true
+ENABLE_CUSTOM_FIELDS=true
+ENABLE_FORECASTING=true
+ENABLE_WORKFLOWS=true
+ENABLE_ANALYTICS=true
+
+# Database (Railway provides DATABASE_URL automatically)
+DATABASE_POOL_SIZE=20
+DATABASE_MAX_OVERFLOW=40
+
+# Optional but recommended
+SENTRY_DSN=
+SENTRY_ENVIRONMENT=production
+SENTRY_TRACES_SAMPLE_RATE=0.1
+
+# Rate Limiting
+RATE_LIMIT_PER_MINUTE=60
+SHOPIFY_API_RATE_LIMIT_PER_SECOND=2
+
+# CORS
+CORS_ORIGINS=https://inventorysync.prestigecorp.au,https://*.myshopify.com
+CORS_ALLOW_CREDENTIALS=true
+CORS_ALLOW_METHODS=GET,POST,PUT,DELETE,OPTIONS
+CORS_ALLOW_HEADERS=*

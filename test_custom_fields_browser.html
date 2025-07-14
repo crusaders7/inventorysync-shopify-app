@@ -1,0 +1,402 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Custom Fields API Browser Test</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            background: white;
+            padding: 30px;
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+        h1 {
+            color: #333;
+            margin-bottom: 10px;
+        }
+        .subtitle {
+            color: #666;
+            margin-bottom: 30px;
+        }
+        .test-section {
+            margin-bottom: 30px;
+            padding: 20px;
+            border: 1px solid #e0e0e0;
+            border-radius: 5px;
+        }
+        .test-section h2 {
+            margin-top: 0;
+            color: #444;
+        }
+        button {
+            background-color: #007bff;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 16px;
+            margin-right: 10px;
+            margin-bottom: 10px;
+        }
+        button:hover {
+            background-color: #0056b3;
+        }
+        button:disabled {
+            background-color: #ccc;
+            cursor: not-allowed;
+        }
+        .response {
+            margin-top: 15px;
+            padding: 15px;
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            font-family: 'Courier New', monospace;
+            font-size: 14px;
+            white-space: pre-wrap;
+            max-height: 300px;
+            overflow-y: auto;
+        }
+        .success {
+            background-color: #d4edda;
+            border-color: #c3e6cb;
+            color: #155724;
+        }
+        .error {
+            background-color: #f8d7da;
+            border-color: #f5c6cb;
+            color: #721c24;
+        }
+        .info {
+            background-color: #d1ecf1;
+            border-color: #bee5eb;
+            color: #0c5460;
+        }
+        input, select, textarea {
+            width: 100%;
+            padding: 8px;
+            margin: 5px 0;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            box-sizing: border-box;
+        }
+        .field-group {
+            margin-bottom: 15px;
+        }
+        .field-group label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: 500;
+            color: #555;
+        }
+        .instructions {
+            background-color: #e7f3ff;
+            border: 1px solid #b3d9ff;
+            padding: 15px;
+            border-radius: 5px;
+            margin-bottom: 20px;
+        }
+        .network-instructions {
+            background-color: #fff3cd;
+            border: 1px solid #ffeaa7;
+            padding: 15px;
+            border-radius: 5px;
+            margin-top: 30px;
+        }
+        .status-indicator {
+            display: inline-block;
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            margin-right: 5px;
+        }
+        .status-success { background-color: #28a745; }
+        .status-error { background-color: #dc3545; }
+        .status-pending { background-color: #ffc107; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Custom Fields API Browser Test</h1>
+        <p class="subtitle">Test all custom field operations and monitor network requests</p>
+
+        <div class="instructions">
+            <strong>📋 Instructions:</strong>
+            <ol>
+                <li>Open DevTools (F12) and go to the Network tab</li>
+                <li>Clear the network log</li>
+                <li>Run each test below and observe the network requests</li>
+                <li>Check request URLs, methods, payloads, and responses</li>
+            </ol>
+        </div>
+
+        <!-- Configuration -->
+        <div class="test-section">
+            <h2>⚙️ Configuration</h2>
+            <div class="field-group">
+                <label>API Base URL:</label>
+                <input type="text" id="apiBase" value="http://localhost:8000" />
+            </div>
+            <div class="field-group">
+                <label>Shop Domain:</label>
+                <input type="text" id="shopDomain" value="inventorysync-dev.myshopify.com" />
+            </div>
+        </div>
+
+        <!-- Test 1: Fetch Custom Fields -->
+        <div class="test-section">
+            <h2>1. Fetch Custom Fields List</h2>
+            <button onclick="fetchCustomFields()">Fetch Fields</button>
+            <div id="fetchResponse" class="response" style="display:none;"></div>
+        </div>
+
+        <!-- Test 2: Create Custom Field -->
+        <div class="test-section">
+            <h2>2. Create New Custom Field</h2>
+            <div class="field-group">
+                <label>Field Name (lowercase, no spaces):</label>
+                <input type="text" id="fieldName" value="test_priority" />
+            </div>
+            <div class="field-group">
+                <label>Display Name:</label>
+                <input type="text" id="displayName" value="Product Priority" />
+            </div>
+            <div class="field-group">
+                <label>Field Type:</label>
+                <select id="fieldType">
+                    <option value="text">Text</option>
+                    <option value="select" selected>Select</option>
+                    <option value="number">Number</option>
+                    <option value="date">Date</option>
+                    <option value="boolean">Boolean</option>
+                </select>
+            </div>
+            <div class="field-group">
+                <label>Description:</label>
+                <textarea id="description" rows="2">Priority level for this product</textarea>
+            </div>
+            <div class="field-group">
+                <label>Options (for select type, comma-separated):</label>
+                <input type="text" id="options" value="Low,Medium,High,Critical" />
+            </div>
+            <button onclick="createCustomField()">Create Field</button>
+            <div id="createResponse" class="response" style="display:none;"></div>
+        </div>
+
+        <!-- Test 3: Update Custom Field -->
+        <div class="test-section">
+            <h2>3. Update Custom Field</h2>
+            <div class="field-group">
+                <label>Field ID:</label>
+                <input type="number" id="updateFieldId" placeholder="Enter field ID from create test" />
+            </div>
+            <div class="field-group">
+                <label>New Display Name:</label>
+                <input type="text" id="updateDisplayName" value="Updated Product Priority" />
+            </div>
+            <div class="field-group">
+                <label>New Description:</label>
+                <textarea id="updateDescription" rows="2">Updated description for priority field</textarea>
+            </div>
+            <div class="field-group">
+                <label>New Options (comma-separated):</label>
+                <input type="text" id="updateOptions" value="Low,Medium,High,Critical,Urgent" />
+            </div>
+            <button onclick="updateCustomField()">Update Field</button>
+            <div id="updateResponse" class="response" style="display:none;"></div>
+        </div>
+
+        <!-- Test 4: Delete Custom Field -->
+        <div class="test-section">
+            <h2>4. Delete Custom Field</h2>
+            <div class="field-group">
+                <label>Field ID:</label>
+                <input type="number" id="deleteFieldId" placeholder="Enter field ID to delete" />
+            </div>
+            <button onclick="deleteCustomField()">Delete Field</button>
+            <div id="deleteResponse" class="response" style="display:none;"></div>
+        </div>
+
+        <!-- Test 5: Get Templates -->
+        <div class="test-section">
+            <h2>5. Get Industry Templates</h2>
+            <button onclick="getTemplates()">Get Templates</button>
+            <div id="templatesResponse" class="response" style="display:none;"></div>
+        </div>
+
+        <div class="network-instructions">
+            <strong>🔍 Network Tab Checklist:</strong>
+            <ul>
+                <li>✓ Request URLs match expected patterns</li>
+                <li>✓ HTTP methods are correct (GET, POST, PUT, DELETE)</li>
+                <li>✓ Request headers include Content-Type: application/json</li>
+                <li>✓ CORS headers are present in responses</li>
+                <li>✓ Response status codes are appropriate</li>
+                <li>✓ Request payloads contain expected data</li>
+                <li>✓ Response times are reasonable</li>
+            </ul>
+        </div>
+    </div>
+
+    <script>
+        // Helper function to display responses
+        function showResponse(elementId, data, isError = false) {
+            const element = document.getElementById(elementId);
+            element.textContent = JSON.stringify(data, null, 2);
+            element.className = 'response ' + (isError ? 'error' : 'success');
+            element.style.display = 'block';
+        }
+
+        // Helper function to make API calls
+        async function apiCall(url, options = {}) {
+            try {
+                console.log(`Making ${options.method || 'GET'} request to: ${url}`);
+                
+                const response = await fetch(url, {
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Origin': 'http://localhost:3000',
+                        ...options.headers
+                    },
+                    ...options
+                });
+
+                const data = await response.json();
+                
+                if (!response.ok) {
+                    throw new Error(`HTTP ${response.status}: ${data.detail || data.message || 'Unknown error'}`);
+                }
+                
+                return { success: true, data };
+            } catch (error) {
+                return { success: false, error: error.message };
+            }
+        }
+
+        // Test 1: Fetch Custom Fields
+        async function fetchCustomFields() {
+            const apiBase = document.getElementById('apiBase').value;
+            const shopDomain = document.getElementById('shopDomain').value;
+            
+            const result = await apiCall(`${apiBase}/api/custom-fields/${shopDomain}`);
+            showResponse('fetchResponse', result, !result.success);
+        }
+
+        // Test 2: Create Custom Field
+        async function createCustomField() {
+            const apiBase = document.getElementById('apiBase').value;
+            const shopDomain = document.getElementById('shopDomain').value;
+            const fieldType = document.getElementById('fieldType').value;
+            
+            const fieldData = {
+                field_name: document.getElementById('fieldName').value,
+                field_type: fieldType,
+                display_name: document.getElementById('displayName').value,
+                description: document.getElementById('description').value,
+                required: false,
+                default_value: '',
+                category: 'product'
+            };
+            
+            // Add validation rules for select type
+            if (fieldType === 'select') {
+                const options = document.getElementById('options').value
+                    .split(',')
+                    .map(opt => opt.trim())
+                    .filter(opt => opt);
+                fieldData.validation_rules = { options };
+            }
+            
+            const result = await apiCall(`${apiBase}/api/custom-fields/${shopDomain}`, {
+                method: 'POST',
+                body: JSON.stringify(fieldData)
+            });
+            
+            showResponse('createResponse', result, !result.success);
+            
+            // Auto-fill field ID for update/delete if successful
+            if (result.success && result.data.field_id) {
+                document.getElementById('updateFieldId').value = result.data.field_id;
+                document.getElementById('deleteFieldId').value = result.data.field_id;
+            }
+        }
+
+        // Test 3: Update Custom Field
+        async function updateCustomField() {
+            const apiBase = document.getElementById('apiBase').value;
+            const shopDomain = document.getElementById('shopDomain').value;
+            const fieldId = document.getElementById('updateFieldId').value;
+            
+            if (!fieldId) {
+                showResponse('updateResponse', { error: 'Please enter a field ID' }, true);
+                return;
+            }
+            
+            const updateData = {
+                display_name: document.getElementById('updateDisplayName').value,
+                description: document.getElementById('updateDescription').value
+            };
+            
+            // Add validation rules if options are provided
+            const options = document.getElementById('updateOptions').value;
+            if (options) {
+                updateData.validation_rules = {
+                    options: options.split(',').map(opt => opt.trim()).filter(opt => opt)
+                };
+            }
+            
+            const result = await apiCall(`${apiBase}/api/custom-fields/${shopDomain}/${fieldId}`, {
+                method: 'PUT',
+                body: JSON.stringify(updateData)
+            });
+            
+            showResponse('updateResponse', result, !result.success);
+        }
+
+        // Test 4: Delete Custom Field
+        async function deleteCustomField() {
+            const apiBase = document.getElementById('apiBase').value;
+            const shopDomain = document.getElementById('shopDomain').value;
+            const fieldId = document.getElementById('deleteFieldId').value;
+            
+            if (!fieldId) {
+                showResponse('deleteResponse', { error: 'Please enter a field ID' }, true);
+                return;
+            }
+            
+            if (!confirm(`Are you sure you want to delete field ID ${fieldId}?`)) {
+                return;
+            }
+            
+            const result = await apiCall(`${apiBase}/api/custom-fields/${shopDomain}/${fieldId}`, {
+                method: 'DELETE'
+            });
+            
+            showResponse('deleteResponse', result, !result.success);
+        }
+
+        // Test 5: Get Templates
+        async function getTemplates() {
+            const apiBase = document.getElementById('apiBase').value;
+            
+            const result = await apiCall(`${apiBase}/api/custom-fields/templates`);
+            showResponse('templatesResponse', result, !result.success);
+        }
+
+        // Auto-run fetch on load
+        window.addEventListener('load', () => {
+            console.log('Custom Fields API Test Page loaded');
+            console.log('Open DevTools Network tab to monitor API calls');
+        });
+    </script>
+</body>
+</html>

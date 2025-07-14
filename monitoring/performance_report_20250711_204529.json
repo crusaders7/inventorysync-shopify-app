@@ -1,0 +1,172 @@
+{
+  "timestamp": "2025-07-11T20:45:29.899893",
+  "metrics": {
+    "connection_stats": {
+      "max_connections": 100,
+      "total_connections": 7,
+      "active_connections": 1,
+      "usage_percent": 7.0,
+      "alert": false
+    },
+    "cache_performance": {
+      "heap_blocks_read": 0.0,
+      "heap_blocks_hit": 214.0,
+      "cache_hit_ratio": 100.0,
+      "alert": false
+    },
+    "database_size": {
+      "database_size_bytes": 9073123,
+      "database_size_pretty": "8860 kB",
+      "database_size_gb": 0.01,
+      "largest_tables": [
+        {
+          "schema": "public",
+          "table": "product_variants",
+          "size_pretty": "112 kB",
+          "size_bytes": 114688
+        },
+        {
+          "schema": "public",
+          "table": "alerts",
+          "size_pretty": "96 kB",
+          "size_bytes": 98304
+        },
+        {
+          "schema": "public",
+          "table": "products",
+          "size_pretty": "96 kB",
+          "size_bytes": 98304
+        },
+        {
+          "schema": "public",
+          "table": "custom_field_definitions",
+          "size_pretty": "80 kB",
+          "size_bytes": 81920
+        },
+        {
+          "schema": "public",
+          "table": "stores",
+          "size_pretty": "80 kB",
+          "size_bytes": 81920
+        },
+        {
+          "schema": "public",
+          "table": "locations",
+          "size_pretty": "64 kB",
+          "size_bytes": 65536
+        },
+        {
+          "schema": "public",
+          "table": "inventory_items",
+          "size_pretty": "64 kB",
+          "size_bytes": 65536
+        },
+        {
+          "schema": "public",
+          "table": "purchase_orders",
+          "size_pretty": "32 kB",
+          "size_bytes": 32768
+        },
+        {
+          "schema": "public",
+          "table": "workflow_rules",
+          "size_pretty": "32 kB",
+          "size_bytes": 32768
+        },
+        {
+          "schema": "public",
+          "table": "inventory_movements",
+          "size_pretty": "24 kB",
+          "size_bytes": 24576
+        }
+      ],
+      "alert": false
+    },
+    "long_running_queries": {
+      "count": 0,
+      "queries": [],
+      "alert": false
+    },
+    "table_bloat": {
+      "bloated_tables": [],
+      "alert": false
+    },
+    "index_usage": {
+      "unused_indexes": [
+        {
+          "schema": "public",
+          "table": "stores",
+          "index": "ix_stores_shopify_store_id",
+          "size": "16 kB",
+          "scans": 0
+        },
+        {
+          "schema": "public",
+          "table": "stores",
+          "index": "ix_stores_id",
+          "size": "16 kB",
+          "scans": 1
+        },
+        {
+          "schema": "public",
+          "table": "locations",
+          "index": "locations_pkey",
+          "size": "16 kB",
+          "scans": 0
+        },
+        {
+          "schema": "public",
+          "table": "locations",
+          "index": "ix_locations_id",
+          "size": "16 kB",
+          "scans": 1
+        },
+        {
+          "schema": "public",
+          "table": "locations",
+          "index": "ix_locations_shopify_location_id",
+          "size": "16 kB",
+          "scans": 0
+        },
+        {
+          "schema": "public",
+          "table": "products",
+          "index": "products_pkey",
+          "size": "16 kB",
+          "scans": 0
+        },
+        {
+          "schema": "public",
+          "table": "products",
+          "index": "ix_products_id",
+          "size": "16 kB",
+          "scans": 22
+        },
+        {
+          "schema": "public",
+          "table": "products",
+          "index": "ix_products_shopify_product_id",
+          "size": "16 kB",
+          "scans": 0
+        },
+        {
+          "schema": "public",
+          "table": "alerts",
+          "index": "alerts_pkey",
+          "size": "16 kB",
+          "scans": 0
+        },
+        {
+          "schema": "public",
+          "table": "stores",
+          "index": "stores_pkey",
+          "size": "16 kB",
+          "scans": 0
+        }
+      ],
+      "recommendation": "Consider dropping unused indexes to save space and improve write performance"
+    }
+  },
+  "alerts": [],
+  "recommendations": []
+}

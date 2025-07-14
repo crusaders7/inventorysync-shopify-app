@@ -1,0 +1,544 @@
+{
+  "info": {
+    "_postman_id": "inventorysync-api-collection",
+    "name": "InventorySync Shopify App API",
+    "description": "Complete API documentation for InventorySync - Save $1,971/month on Custom Fields!\n\n## Overview\nInventorySync allows Basic Shopify tier merchants to add unlimited custom fields without upgrading to Shopify Plus. Our app provides inventory synchronization, custom field management, webhook handling, and comprehensive reporting.\n\n## Key Features\n- **Custom Fields**: Add unlimited custom fields to products (saves $1,971/month vs Shopify Plus)\n- **Inventory Sync**: Real-time inventory synchronization across locations\n- **Webhook Management**: Handle Shopify webhooks for inventory updates\n- **Reporting**: Comprehensive inventory and sales reports\n- **Forecasting**: AI-powered demand forecasting\n- **Alerts**: Low stock and custom alerts\n\n## Authentication\nAll API endpoints require authentication via Shopify OAuth or API key in the `X-Shopify-Access-Token` header.\n\n## Base URL\n`https://api.inventorysync.app`",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "Core Features",
+      "item": [
+        {
+          "name": "Custom Fields (Main Feature)",
+          "item": [
+            {
+              "name": "Get Value Proposition",
+              "request": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{baseUrl}}/api/custom-fields/value-proposition",
+                  "host": ["{{baseUrl}}"],
+                  "path": ["api", "custom-fields", "value-proposition"]
+                },
+                "description": "Explains the value of the custom fields feature - how merchants save $1,971/month compared to Shopify Plus"
+              }
+            },
+            {
+              "name": "Get Field Templates",
+              "request": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{baseUrl}}/api/custom-fields/templates",
+                  "host": ["{{baseUrl}}"],
+                  "path": ["api", "custom-fields", "templates"]
+                },
+                "description": "Get pre-built field templates for different industries (apparel, electronics, food & beverage, jewelry)"
+              }
+            },
+            {
+              "name": "List All Custom Fields",
+              "request": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{baseUrl}}/api/custom-fields",
+                  "host": ["{{baseUrl}}"],
+                  "path": ["api", "custom-fields"]
+                },
+                "description": "List all custom fields across all shops"
+              }
+            },
+            {
+              "name": "Get Shop Custom Fields",
+              "request": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{baseUrl}}/api/custom-fields/{{shop_domain}}",
+                  "host": ["{{baseUrl}}"],
+                  "path": ["api", "custom-fields", "{{shop_domain}}"]
+                },
+                "description": "Get all custom fields for a specific shop"
+              }
+            },
+            {
+              "name": "Create Custom Field",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"field_name\": \"expiry_date\",\n  \"display_name\": \"Expiry Date\",\n  \"field_type\": \"date\",\n  \"target_entity\": \"product\",\n  \"is_required\": true,\n  \"validation_rules\": {\n    \"min_date\": \"today\"\n  }\n}"
+                },
+                "url": {
+                  "raw": "{{baseUrl}}/api/custom-fields/{{shop_domain}}",
+                  "host": ["{{baseUrl}}"],
+                  "path": ["api", "custom-fields", "{{shop_domain}}"]
+                },
+                "description": "Create a new custom field for products. This feature alone saves merchants $1,971/month!"
+              }
+            },
+            {
+              "name": "Apply Template",
+              "request": {
+                "method": "POST",
+                "header": [],
+                "url": {
+                  "raw": "{{baseUrl}}/api/custom-fields/templates/{{template_name}}/apply/{{shop_domain}}",
+                  "host": ["{{baseUrl}}"],
+                  "path": ["api", "custom-fields", "templates", "{{template_name}}", "apply", "{{shop_domain}}"]
+                },
+                "description": "Apply a pre-built template (e.g., 'apparel', 'electronics') to instantly add relevant custom fields"
+              }
+            },
+            {
+              "name": "Delete Custom Field",
+              "request": {
+                "method": "DELETE",
+                "header": [],
+                "url": {
+                  "raw": "{{baseUrl}}/api/custom-fields/{{shop_domain}}/{{field_id}}",
+                  "host": ["{{baseUrl}}"],
+                  "path": ["api", "custom-fields", "{{shop_domain}}", "{{field_id}}"]
+                },
+                "description": "Delete a custom field"
+              }
+            }
+          ]
+        },
+        {
+          "name": "Inventory Sync",
+          "item": [
+            {
+              "name": "Get Inventory Items",
+              "request": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{baseUrl}}/api/inventory/items",
+                  "host": ["{{baseUrl}}"],
+                  "path": ["api", "inventory", "items"]
+                },
+                "description": "Get all inventory items with current stock levels"
+              }
+            },
+            {
+              "name": "Get Inventory Levels",
+              "request": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{baseUrl}}/api/inventory/levels",
+                  "host": ["{{baseUrl}}"],
+                  "path": ["api", "inventory", "levels"]
+                },
+                "description": "Get inventory levels across all locations"
+              }
+            },
+            {
+              "name": "Sync Inventory",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"sync_type\": \"full\",\n  \"locations\": [\"all\"]\n}"
+                },
+                "url": {
+                  "raw": "{{baseUrl}}/api/inventory/sync",
+                  "host": ["{{baseUrl}}"],
+                  "path": ["api", "inventory", "sync"]
+                },
+                "description": "Trigger inventory synchronization with Shopify"
+              }
+            },
+            {
+              "name": "Get Inventory History",
+              "request": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{baseUrl}}/api/inventory/history",
+                  "host": ["{{baseUrl}}"],
+                  "path": ["api", "inventory", "history"]
+                },
+                "description": "Get inventory movement history"
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Webhook Management",
+      "item": [
+        {
+          "name": "List Webhooks",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/webhooks",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "webhooks"]
+            },
+            "description": "Get all registered webhooks"
+          }
+        },
+        {
+          "name": "Register Webhook",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"topic\": \"inventory_levels/update\",\n  \"address\": \"https://api.inventorysync.app/webhooks/inventory\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/webhooks/register",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "webhooks", "register"]
+            },
+            "description": "Register a new webhook for Shopify events"
+          }
+        },
+        {
+          "name": "GDPR - Customer Data Request",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"shop_id\": \"{{shop_id}}\",\n  \"shop_domain\": \"{{shop_domain}}\",\n  \"customer\": {\n    \"id\": 123456789,\n    \"email\": \"customer@example.com\"\n  }\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/webhooks/customers/data_request",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "webhooks", "customers", "data_request"]
+            },
+            "description": "Handle GDPR customer data request webhook"
+          }
+        },
+        {
+          "name": "GDPR - Customer Redact",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"shop_id\": \"{{shop_id}}\",\n  \"shop_domain\": \"{{shop_domain}}\",\n  \"customer\": {\n    \"id\": 123456789,\n    \"email\": \"customer@example.com\"\n  }\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/webhooks/customers/redact",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "webhooks", "customers", "redact"]
+            },
+            "description": "Handle GDPR customer data redaction webhook"
+          }
+        },
+        {
+          "name": "GDPR - Shop Redact",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"shop_id\": \"{{shop_id}}\",\n  \"shop_domain\": \"{{shop_domain}}\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/webhooks/shop/redact",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "webhooks", "shop", "redact"]
+            },
+            "description": "Handle GDPR shop data redaction webhook"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Authentication",
+      "item": [
+        {
+          "name": "Install App",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/auth/install?shop={{shop_domain}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "auth", "install"],
+              "query": [
+                {
+                  "key": "shop",
+                  "value": "{{shop_domain}}"
+                }
+              ]
+            },
+            "description": "Start Shopify app installation process"
+          }
+        },
+        {
+          "name": "OAuth Callback",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/auth/callback?code={{code}}&shop={{shop_domain}}&state={{state}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "auth", "callback"],
+              "query": [
+                {
+                  "key": "code",
+                  "value": "{{code}}"
+                },
+                {
+                  "key": "shop",
+                  "value": "{{shop_domain}}"
+                },
+                {
+                  "key": "state",
+                  "value": "{{state}}"
+                }
+              ]
+            },
+            "description": "Handle Shopify OAuth callback"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Reports & Analytics",
+      "item": [
+        {
+          "name": "Inventory Summary",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/reports/inventory-summary",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "reports", "inventory-summary"]
+            },
+            "description": "Get inventory summary report"
+          }
+        },
+        {
+          "name": "Movement History",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/reports/movement-history",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "reports", "movement-history"]
+            },
+            "description": "Get inventory movement history report"
+          }
+        },
+        {
+          "name": "Low Stock Report",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/reports/low-stock",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "reports", "low-stock"]
+            },
+            "description": "Get low stock items report"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Forecasting",
+      "item": [
+        {
+          "name": "Get Demand Forecast",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/forecasting/demand",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "forecasting", "demand"]
+            },
+            "description": "Get AI-powered demand forecast"
+          }
+        },
+        {
+          "name": "Generate Forecast",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"period\": \"next_30_days\",\n  \"products\": [\"all\"]\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/forecasting/generate",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "forecasting", "generate"]
+            },
+            "description": "Generate new demand forecast"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Health & Monitoring",
+      "item": [
+        {
+          "name": "Root Endpoint",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/",
+              "host": ["{{baseUrl}}"],
+              "path": [""]
+            },
+            "description": "Get API overview and value proposition"
+          }
+        },
+        {
+          "name": "Health Check",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/health",
+              "host": ["{{baseUrl}}"],
+              "path": ["health"]
+            },
+            "description": "Basic health check endpoint"
+          }
+        },
+        {
+          "name": "API Overview",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api",
+              "host": ["{{baseUrl}}"],
+              "path": ["api"]
+            },
+            "description": "Get list of all available API endpoints"
+          }
+        }
+      ]
+    }
+  ],
+  "auth": {
+    "type": "apikey",
+    "apikey": [
+      {
+        "key": "value",
+        "value": "{{access_token}}",
+        "type": "string"
+      },
+      {
+        "key": "key",
+        "value": "X-Shopify-Access-Token",
+        "type": "string"
+      }
+    ]
+  },
+  "event": [
+    {
+      "listen": "prerequest",
+      "script": {
+        "type": "text/javascript",
+        "exec": [""]
+      }
+    },
+    {
+      "listen": "test",
+      "script": {
+        "type": "text/javascript",
+        "exec": [""]
+      }
+    }
+  ],
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://localhost:8000",
+      "type": "default"
+    },
+    {
+      "key": "shop_domain",
+      "value": "test-shop.myshopify.com",
+      "type": "default"
+    },
+    {
+      "key": "access_token",
+      "value": "your-access-token",
+      "type": "default"
+    },
+    {
+      "key": "shop_id",
+      "value": "123456",
+      "type": "default"
+    },
+    {
+      "key": "template_name",
+      "value": "apparel",
+      "type": "default"
+    },
+    {
+      "key": "field_id",
+      "value": "field_123",
+      "type": "default"
+    },
+    {
+      "key": "code",
+      "value": "oauth_code",
+      "type": "default"
+    },
+    {
+      "key": "state",
+      "value": "oauth_state",
+      "type": "default"
+    }
+  ]
+}
