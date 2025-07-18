@@ -51,6 +51,10 @@ export default defineConfig(({ mode }) => {
           changeOrigin: true,
           secure: false,
         }
+      },
+      headers: {
+        'Content-Security-Policy': "frame-ancestors *",
+        'Access-Control-Allow-Origin': '*'
       }
     },
     

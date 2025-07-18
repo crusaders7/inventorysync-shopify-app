@@ -101,3 +101,11 @@ preStop = "kill -SIGTERM 1 && sleep 15"
 
 # Post-start hook to warm up the application
 postStart = "curl -f http://localhost:8000/health || exit 1"
+
+# Headers configuration
+[[headers]]
+for = "/*"
+[headers.values]
+X-Frame-Options = ""
+Content-Security-Policy = "frame-ancestors 'self' https://*.myshopify.com https://admin.shopify.com https://*.shopify.com;"
+Access-Control-Allow-Origin = "*"

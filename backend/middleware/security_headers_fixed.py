@@ -19,14 +19,27 @@ class SecurityHeadersMiddleware:
             if message["type"] == "http.response.start":
                 headers = dict(message.get("headers", []))
                 
-                # Add security headers
+                # Add security headers for Shopify embedded app
                 headers[b"x-content-type-options"] = b"nosniff"
-                headers[b"x-frame-options"] = b"DENY"
+                # X-Frame-Options removed to allow Shopify embedding
+                # headers[b"x-frame-options"] = b"DENY"
                 headers[b"x-xss-protection"] = b"1; mode=block"
                 headers[b"referrer-policy"] = b"strict-origin-when-cross-origin"
                 
-                # Content Security Policy
-                csp = "default-src 'self'; script-src 'self' 'unsafe-inline' https://cdn.shopify.com; style-src 'self' 'unsafe-inline' https://cdn.shopify.com; img-src 'self' data: https: blob:; font-src 'self' https://cdn.shopify.com; connect-src 'self' https://*.myshopify.com wss://*.myshopify.com; frame-ancestors 'none'; base-uri 'self'; form-action 'self'"
+                # Content Security Policy - Updated for Shopify embedding and analytics
+                csp = (
+                    "default-src *; "
+                    "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://cdn.shopify.com https://*.shopify.com https://*.shopifysvc.com; "
+                    "style-src 'self' 'unsafe-inline' https://cdn.shopify.com; "
+                    "img-src 'self' data: https: blob:; "
+                    "font-src 'self' data: https://cdn.shopify.com; "
+                    "connect-src 'self' https://*.shopify.com https://*.shopifysvc.com wss: https: "
+                    "https://monorail-edge.shopifysvc.com https://error-analytics-sessions-production.shopifysvc.com "
+                    "https://otlp-http-production.shopifysvc.com; "
+                    "frame-ancestors *; "
+                    "base-uri 'self'; "
+                    "form-action 'self'"
+                )
                 headers[b"content-security-policy"] = csp.encode()
                 
                 # HSTS for HTTPS
