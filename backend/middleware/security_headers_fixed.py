@@ -21,34 +21,24 @@ class SecurityHeadersMiddleware:
                 
                 # Add security headers for Shopify embedded app
                 headers[b"x-content-type-options"] = b"nosniff"
-                # X-Frame-Options removed to allow Shopify embedding
-                # headers[b"x-frame-options"] = b"DENY"
                 headers[b"x-xss-protection"] = b"1; mode=block"
                 headers[b"referrer-policy"] = b"strict-origin-when-cross-origin"
                 
                 # Content Security Policy - Updated for Shopify embedding and analytics
                 csp = (
-                    "default-src *; "
-                    "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://cdn.shopify.com https://*.shopify.com https://*.shopifysvc.com; "
-                    "style-src 'self' 'unsafe-inline' https://cdn.shopify.com; "
-                    "img-src 'self' data: https: blob:; "
-                    "font-src 'self' data: https://cdn.shopify.com; "
-                    "connect-src 'self' https://*.shopify.com https://*.shopifysvc.com wss: https: "
-                    "https://monorail-edge.shopifysvc.com https://error-analytics-sessions-production.shopifysvc.com "
-                    "https://otlp-http-production.shopifysvc.com; "
-                    "frame-ancestors *; "
-                    "base-uri 'self'; "
-                    "form-action 'self'"
+                    "default-src * 'unsafe-inline' 'unsafe-eval'; "
+                    "script-src * 'unsafe-inline' 'unsafe-eval'; "
+                    "style-src * 'unsafe-inline'; "
+                    "img-src * data: blob:; "
+                    "font-src * data:; "
+                    "connect-src *; "
+                    "frame-ancestors * https://*.myshopify.com https://admin.shopify.com https://*.shopify.com;"
                 )
                 headers[b"content-security-policy"] = csp.encode()
                 
-                # HSTS for HTTPS
-                if scope.get("scheme") == "https":
-                    headers[b"strict-transport-security"] = b"max-age=31536000; includeSubDomains"
-                
-                # Permissions Policy
-                permissions = "accelerometer=(), camera=(), geolocation=(), gyroscope=(), magnetometer=(), microphone=(), payment=(), usb=()"
-                headers[b"permissions-policy"] = permissions.encode()
+                # Remove x-frame-options header to allow embedding
+                if b"x-frame-options" in headers:
+                    del headers[b"x-frame-options"]
                 
                 # Update message with new headers
                 message["headers"] = [(k, v) for k, v in headers.items()]
