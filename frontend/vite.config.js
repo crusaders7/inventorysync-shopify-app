@@ -53,7 +53,7 @@ export default defineConfig(({ mode }) => {
         }
       },
       headers: {
-        'Content-Security-Policy': "frame-ancestors *",
+        'Content-Security-Policy': "default-src * 'unsafe-inline' 'unsafe-eval'; connect-src * 'unsafe-inline'; frame-ancestors * https://*.myshopify.com https://admin.shopify.com https://*.shopify.com;",
         'Access-Control-Allow-Origin': '*'
       }
     },
