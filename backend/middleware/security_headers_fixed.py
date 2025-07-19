@@ -19,26 +19,16 @@ class SecurityHeadersMiddleware:
             if message["type"] == "http.response.start":
                 headers = dict(message.get("headers", []))
                 
-                # Add security headers for Shopify embedded app
-                headers[b"x-content-type-options"] = b"nosniff"
-                headers[b"x-xss-protection"] = b"1; mode=block"
-                headers[b"referrer-policy"] = b"strict-origin-when-cross-origin"
+                # Remove existing security headers
+                headers.pop(b"x-frame-options", None)
+                headers.pop(b"content-security-policy", None)
+                headers.pop(b"x-content-type-options", None)
+                headers.pop(b"x-xss-protection", None)
+                headers.pop(b"referrer-policy", None)
                 
-                # Content Security Policy - Updated for Shopify embedding and analytics
-                csp = (
-                    "default-src * 'unsafe-inline' 'unsafe-eval'; "
-                    "script-src * 'unsafe-inline' 'unsafe-eval'; "
-                    "style-src * 'unsafe-inline'; "
-                    "img-src * data: blob:; "
-                    "font-src * data:; "
-                    "connect-src *; "
-                    "frame-ancestors * https://*.myshopify.com https://admin.shopify.com https://*.shopify.com;"
-                )
-                headers[b"content-security-policy"] = csp.encode()
-                
-                # Remove x-frame-options header to allow embedding
-                if b"x-frame-options" in headers:
-                    del headers[b"x-frame-options"]
+                # Add our security headers
+                headers[b"access-control-allow-origin"] = b"*"
+                headers[b"content-security-policy"] = b"default-src * 'unsafe-inline' 'unsafe-eval'; frame-ancestors * https://*.myshopify.com https://admin.shopify.com https://*.shopify.com;"
                 
                 # Update message with new headers
                 message["headers"] = [(k, v) for k, v in headers.items()]

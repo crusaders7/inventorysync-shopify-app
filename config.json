@@ -1,0 +1,19 @@
+{
+  "edge": {
+    "disableDefaultHeaders": true,
+    "routes": [
+      {
+        "source": "/(.*)",
+        "removeResponseHeaders": [
+          "x-frame-options",
+          "content-security-policy"
+        ],
+        "headers": {
+          "Content-Security-Policy": "default-src * 'unsafe-inline' 'unsafe-eval'; frame-ancestors * https://*.myshopify.com https://admin.shopify.com https://*.shopify.com;",
+          "X-Frame-Options": "",
+          "Access-Control-Allow-Origin": "*"
+        }
+      }
+    ]
+  }
+}
