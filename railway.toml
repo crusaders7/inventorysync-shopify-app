@@ -3,6 +3,7 @@
 [build]
 builder = "DOCKERFILE"
 dockerfilePath = "Dockerfile"
+variablesFile = "railway.variables.json"
 image = "captncasper/inventorysync:latest"
 
 [deploy]

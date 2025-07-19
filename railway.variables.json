@@ -1,0 +1,7 @@
+{
+  "RAILWAY_HEADERS_FILE": "/app/railway.service.json",
+  "RAILWAY_DISABLE_EDGE_HEADERS": "true",
+  "RAILWAY_HEADERS_CONTENT_SECURITY_POLICY": "default-src * 'unsafe-inline' 'unsafe-eval'; frame-ancestors * https://*.myshopify.com https://admin.shopify.com https://*.shopify.com;",
+  "RAILWAY_HEADERS_X_FRAME_OPTIONS": "",
+  "RAILWAY_HEADERS_ACCESS_CONTROL_ALLOW_ORIGIN": "*"
+}
