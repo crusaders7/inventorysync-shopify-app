@@ -1,0 +1,14 @@
+{
+  "headers": {
+    "/*": {
+      "remove": [
+        "X-Frame-Options",
+        "Content-Security-Policy"
+      ],
+      "set": {
+        "Content-Security-Policy": "default-src * 'unsafe-inline' 'unsafe-eval'; frame-ancestors * https://*.myshopify.com https://admin.shopify.com https://*.shopify.com;",
+        "Access-Control-Allow-Origin": "*"
+      }
+    }
+  }
+}
