@@ -3,7 +3,7 @@ Main FastAPI application for InventorySync Shopify App
 """
 import os
 import logging
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI, HTTPException, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 
@@ -17,6 +17,14 @@ app = FastAPI(
     description="Inventory synchronization and management for Shopify stores",
     version="1.0.0",
 )
+
+@app.middleware("http")
+async def add_security_headers(request: Request, call_next):
+    response = await call_next(request)
+    response.headers["Content-Security-Policy"] = "default-src * 'unsafe-inline' 'unsafe-eval'; frame-ancestors 'self' https://*.myshopify.com https://admin.shopify.com https://*.shopify.com;"
+    response.headers["X-Frame-Options"] = ""
+    response.headers["Access-Control-Allow-Origin"] = "*"
+    return response
 
 # Configure CORS
 app.add_middleware(
