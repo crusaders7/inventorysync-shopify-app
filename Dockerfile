@@ -17,6 +17,9 @@ COPY backend/requirements.txt .
 RUN pip install --no-cache-dir --user -r requirements.txt
 
 # Stage 2: Runtime stage
+FROM nginx:alpine as nginx
+COPY nginx.conf /etc/nginx/nginx.conf
+
 FROM python:3.11-slim
 
 WORKDIR /app
