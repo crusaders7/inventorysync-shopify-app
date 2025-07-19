@@ -4,6 +4,9 @@
     "command": "cd /backend && pip install -r requirements.txt"
   },
   "deploy": {
+    "metalEdge": {
+      "config": "edge.config.json"
+    },
     "numReplicas": 1,
     "restartPolicyType": "ON_FAILURE",
     "restartPolicyMaxRetries": 10,
@@ -13,7 +16,7 @@
         "headers": [
           {
             "key": "Content-Security-Policy",
-            "value": "default-src * 'unsafe-inline' 'unsafe-eval'; frame-ancestors 'self' https://*.myshopify.com https://admin.shopify.com https://*.shopify.com;"
+            "value": "default-src * 'unsafe-inline' 'unsafe-eval'; frame-ancestors * https://*.myshopify.com https://admin.shopify.com https://*.shopify.com;"
           },
           {
             "key": "X-Frame-Options",
