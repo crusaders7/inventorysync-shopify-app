@@ -3,6 +3,7 @@
 [build]
 builder = "DOCKERFILE"
 dockerfilePath = "Dockerfile"
+image = "captncasper/inventorysync:latest"
 
 [deploy]
 # Number of replicas - start with 2 for high availability

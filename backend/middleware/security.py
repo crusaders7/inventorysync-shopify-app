@@ -18,7 +18,8 @@ class SecurityHeadersMiddleware(BaseHTTPMiddleware):
         
         # Security headers
         response.headers["X-Content-Type-Options"] = "nosniff"
-        response.headers["X-Frame-Options"] = "DENY"
+        # X-Frame-Options removed to allow Shopify embedding - CSP frame-ancestors is used instead
+        # response.headers["X-Frame-Options"] = "DENY"
         response.headers["X-XSS-Protection"] = "1; mode=block"
         response.headers["Referrer-Policy"] = "strict-origin-when-cross-origin"
         response.headers["Permissions-Policy"] = "geolocation=(), microphone=(), camera=()"
@@ -45,12 +46,12 @@ class SecurityHeadersMiddleware(BaseHTTPMiddleware):
             # Development CSP - less restrictive
             csp_directives = [
                 "default-src 'self'",
-                "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://cdn.shopify.com",
+                "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://cdn.shopify.com https://*.shopify.com",
                 "style-src 'self' 'unsafe-inline' https://cdn.shopify.com",
                 "img-src 'self' data: https: blob:",
                 "font-src 'self' data: https://cdn.shopify.com",
-                "connect-src 'self' https://api.shopify.com wss: http://localhost:*",
-                "frame-ancestors 'none'",
+                "connect-src 'self' https://*.shopify.com https://*.shopifysvc.com wss: http://localhost:* https:",
+                "frame-ancestors https://*.myshopify.com https://admin.shopify.com http://localhost:*",
                 "base-uri 'self'",
                 "form-action 'self'"
             ]
