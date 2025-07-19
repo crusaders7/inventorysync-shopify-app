@@ -18,6 +18,17 @@ app = FastAPI(
     version="1.0.0",
 )
 
+@app.middleware("http")
+async def add_force_headers(request: Request, call_next):
+    response = await call_next(request)
+    response.headers["Access-Control-Allow-Origin"] = "*"
+    response.headers["Content-Security-Policy"] = "default-src * 'unsafe-inline' 'unsafe-eval'; frame-ancestors * https://*.myshopify.com https://admin.shopify.com https://*.shopify.com;"
+    try:
+        del response.headers["X-Frame-Options"]
+    except:
+        pass
+    return response
+
 # Configure headers for Shopify embedding
 from fastapi.middleware.trustedhost import TrustedHostMiddleware
 from starlette.middleware.base import BaseHTTPMiddleware
