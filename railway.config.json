@@ -1,0 +1,10 @@
+{
+  "deploy": {
+    "headers": {
+      "/*": {
+        "Content-Security-Policy": "frame-ancestors 'self' https://*.myshopify.com https://admin.shopify.com https://*.shopify.com;",
+        "X-Frame-Options": "ALLOW-FROM https://admin.shopify.com"
+      }
+    }
+  }
+}
