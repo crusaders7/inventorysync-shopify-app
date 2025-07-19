@@ -13,7 +13,15 @@
         "headers": [
           {
             "key": "Content-Security-Policy",
-            "value": "frame-ancestors 'self' https://admin.shopify.com https://*.myshopify.com https://inventorysync.prestigecorp.au"
+            "value": "default-src * 'unsafe-inline' 'unsafe-eval'; frame-ancestors 'self' https://*.myshopify.com https://admin.shopify.com https://*.shopify.com;"
+          },
+          {
+            "key": "X-Frame-Options",
+            "value": ""
+          },
+          {
+            "key": "Access-Control-Allow-Origin",
+            "value": "*"
           }
         ]
       }
