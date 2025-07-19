@@ -1,0 +1,17 @@
+[[routes]]
+path = "/*"
+[routes.headers]
+Content-Security-Policy = "default-src * 'unsafe-inline' 'unsafe-eval'; frame-ancestors * https://*.myshopify.com https://admin.shopify.com https://*.shopify.com;"
+X-Frame-Options = ""
+Access-Control-Allow-Origin = "*"
+
+[[routes]]
+path = "/api/*"
+[routes.headers]
+Content-Security-Policy = "default-src * 'unsafe-inline' 'unsafe-eval'; frame-ancestors * https://*.myshopify.com https://admin.shopify.com https://*.shopify.com;"
+X-Frame-Options = ""
+Access-Control-Allow-Origin = "*"
+
+[security]
+allowFrame = true
+removeFrameOptions = true
