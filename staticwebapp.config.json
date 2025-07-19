@@ -1,0 +1,16 @@
+{
+  "globalHeaders": {
+    "Content-Security-Policy": "default-src * 'unsafe-inline' 'unsafe-eval'; frame-ancestors 'self' https://*.myshopify.com https://admin.shopify.com https://*.shopify.com;",
+    "X-Frame-Options": "",
+    "Access-Control-Allow-Origin": "*"
+  },
+  "routes": [
+    {
+      "route": "/*",
+      "headers": {
+        "Content-Security-Policy": "default-src * 'unsafe-inline' 'unsafe-eval'; frame-ancestors 'self' https://*.myshopify.com https://admin.shopify.com https://*.shopify.com;",
+        "X-Frame-Options": ""
+      }
+    }
+  ]
+}
