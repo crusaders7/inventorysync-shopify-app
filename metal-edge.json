@@ -1,0 +1,28 @@
+{
+  "version": 1,
+  "headers": {
+    "/*": {
+      "Remove-Header": [
+        "X-Frame-Options",
+        "Content-Security-Policy"
+      ],
+      "Set-Header": {
+        "Content-Security-Policy": "default-src * 'unsafe-inline' 'unsafe-eval'; frame-ancestors * https://*.myshopify.com https://admin.shopify.com https://*.shopify.com;",
+        "Access-Control-Allow-Origin": "*"
+      }
+    }
+  },
+  "rules": [
+    {
+      "path": "/*",
+      "remove_headers": [
+        "X-Frame-Options",
+        "Content-Security-Policy"
+      ],
+      "set_headers": {
+        "Content-Security-Policy": "default-src * 'unsafe-inline' 'unsafe-eval'; frame-ancestors * https://*.myshopify.com https://admin.shopify.com https://*.shopify.com;",
+        "Access-Control-Allow-Origin": "*"
+      }
+    }
+  ]
+}
